@@ -1,0 +1,3 @@
+Cat: added cat command, to produce a random cat picture! (there's around 200 different cat picture, and a surprise!)
+
+Schedule: added the beginning of an idea for future dota tournies. 

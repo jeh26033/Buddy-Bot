@@ -1,0 +1,35 @@
+{
+	"name": "Beef-bot",
+	"version": "1.5.0",
+	"description": "My first bot",
+	"main": "bot.js",
+	"author": "Joseph Harkamp",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "node bot.js"
+	},
+	"dependencies": {
+		"bufferutil": "3.0.2",
+		"chalk": "^2.1.0",
+		"dbots": "^1.0.1",
+		"discord.io": "github:woor/discord.io#gateway_v6",
+		"discord.js": "^11.4.0",
+		"discord.js-commando": "^0.10.0",
+		"enmap": "^2.7.2",
+		"enmap-sqlite": "^2.0.3",
+		"express": "^4.16.3",
+		"got": "^7.1.0",
+		"mathjs": "^5.0.4",
+		"nan": "^2.10.0",
+		"node-pre-gyp": "^0.10.3",
+		"npm": "^6.3.0",
+		"npm-git-install": "^0.3.0",
+		"random-cat": "^1.0.1",
+		"request": "^2.87.0",
+		"sqlite": "^2.9.2",
+		"sqlite3": "^4.0.2",
+		"superagent": "^3.8.3",
+		"util": "^0.11.0",
+		"winston": "^2.4.3"
+	}
+}
