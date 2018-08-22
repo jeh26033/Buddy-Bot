@@ -1,3 +1,11 @@
 Cat: added cat command, to produce a random cat picture! (there's around 200 different cat picture, and a surprise!)
 
 Schedule: added the beginning of an idea for future dota tournies. 
+
+**STARBOARD** the big addition in this version, added the ability to push messages to a best-of channel.
+
+improved the Meme command with 40 additional non-programmer memes.
+
+Added our first API call with the Nasa space fact of the day command
+
+added a few minor fun commands, including respects 
