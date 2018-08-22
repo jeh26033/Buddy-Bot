@@ -151,7 +151,7 @@ client.on('messageReactionAdd', async(reaction, user) => {
         const guild = GuildName(reaction.message.guild.name);
         const message = reaction.message;
         //checks if you're staring your own messages.
-        //if (message.author.id === user.id) return message.channel.send(`${user}, you cannot star your own messages.`);
+        if (message.author.id === user.id) return message.channel.send(`${user}, you cannot star your own messages.`);
         //checks if you're staring a bot message
         if (message.author.bot) return message.channel.send(`${user}, you cannot star bot messages.`);
         const starChannel = message.guild.channels.find('name','starboard');
@@ -199,7 +199,7 @@ client.on('messageReactionAdd', async(reaction, user) => {
           // If the message is empty, we don't allow the user to star the message.
           if (image === '' && message.cleanContent.length < 1) return message.channel.send(`${user}, you cannot star an empty message.`); 
           message.channel.send('The message has been added to the Starchannel!');
-          message.author.send('you had a post starred!');
+          //message.author.send('you had a post starred!');
           const embed = new RichEmbed()
             // We set the color to a nice yellow here.
             .setColor(15844367)
