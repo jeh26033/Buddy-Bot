@@ -142,7 +142,7 @@ module.exports = class MemeCommand extends Command {
         msg.say(memeList);
 
         //sends report to bot-log channel
-        client.channels.get("481553844132773888").send("Memes have rained down")
+       
 
   };
 }
