@@ -14,6 +14,8 @@ module.exports = class ReplyCommand extends Command {
         });
     }
     run(msg) {
+        
         return msg.say('Hi, I\'m awake!');
+
     }
 };

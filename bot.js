@@ -14,7 +14,7 @@
  */
 
 const Discord = require('discord.js');
-const sqlite = require('sqlite');
+
 const path = require('path');
 const commando = require('discord.js-commando');
 const { Command } = require('discord.js-commando');
@@ -30,14 +30,16 @@ const dbots = require('superagent');
 const config = require("./config.json");
 const moment = require('moment');
 const Enmap = require("enmap");
+const EnmapLevel = require('enmap-level');
 const { RichEmbed } = require('discord.js');
+
 //heroku ports and such.
 const host = '0.0.0.0';
 const port = process.env.PORT || 3000;
 
 // client set up and settings
 const client = new commando.Client({
-    commandPrefix: 'buddy, ',
+    commandPrefix: '!',
     owner: [
         '162215263335350272' //joe
     ],
@@ -62,10 +64,14 @@ client.registry
 console.log(chalk.green('Commando set up.'));
 console.log('Awaiting log in.');
 const sql = require("sqlite");
-sql.open("./data/database.sqlite");
+sql.open("./score.sqlite");
 
+
+//reaction for starboard
 var reaction = '⭐';
 
+
+//error message managment 
 client
     .on('error', e => console.error(error(e)))
     .on('warn', e => console.warn(warn(e)))
@@ -85,10 +91,10 @@ client
             blocked; ${reason}
         `);
     })
+
+
 //settings and blacklist. Needs more work.
-sqlite.open(path.join(__dirname, "settings.sqlite3")).then((db) => {
-    client.setProvider(new SQLiteProvider(db));
-});
+
 /*
 client.dispatcher.addInhibitor(msg => {
   const blacklist = require('./bin/blacklist.json');
@@ -144,7 +150,7 @@ client.on('commandRun', (command, promise, msg) => {
 //super cool starboard
 
 client.on('messageReactionAdd', async(reaction, user) => {
-    
+    const botlog= client.channels.find('name','bot-logs');
     if (reaction.emoji.name === '⭐') {
         this.client = client;
         console.log(chalk.yellow(`Found a Star!`));
@@ -165,7 +171,6 @@ client.on('messageReactionAdd', async(reaction, user) => {
         
 
         if (stars) {
-            
             // Regex to check how many stars the embed has.
             const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.embeds[0].footer.text);
 
@@ -186,20 +191,42 @@ client.on('messageReactionAdd', async(reaction, user) => {
                 const starMsg = await starChannel.fetchMessage(stars.id);
                 // And now we edit the message with the new embed!
                 await starMsg.edit({ embed }); 
-               
         }
 
         // Now we use an if statement for if a message isn't found in the starboard for the message.
         if (!stars) {
-        console.log('A new Star message!');
-
-          // We use the this.extension function to see if there is anything attached to the message.
           
+          console.log('A new Star message!');
           const image =  message.attachments.size > 0 ? message.attachments.array()[0].url : ''; 
           // If the message is empty, we don't allow the user to star the message.
           if (image === '' && message.cleanContent.length < 1) return message.channel.send(`${user}, you cannot star an empty message.`); 
           message.channel.send('The message has been added to the Starchannel!');
+          //star alert!
           //message.author.send('you had a post starred!');
+
+          // gives user 100 buddybucks
+          sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}"`).then(row => {
+            if (row) {
+              console.log('giving bucks for starz')
+              const curPts = parseInt(row.points, 10);
+              const newPts = curPts + 100;
+              sql.run(`UPDATE scores SET points = ${newPts} WHERE userId = ${message.author.id}`);
+              message.reply(`100 Buddybucks awarded to ${message.author.tag} for getting a star!`);
+              botlog.send(`100 Buddybucks awarded to ${message.author.tag} for getting a star. They have a balance of ${newPts} buddybucks`);
+            } else {
+              message.reply(`The user ${message.author.tag} doesn't have a scores account! Creating one now...`);
+              sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [message.author.id, 100]);
+              message.reply('Account created.');
+            }
+          })
+            .catch(err => {
+              if (err) console.error(`${err} \n${err.stack}`);
+              sql.run('CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER)').then(() => {
+                sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [message.author.id, 0]);
+                message.reply('Table did not exist, user inserted into new table.');
+              });
+            });
+
           const embed = new RichEmbed()
             // We set the color to a nice yellow here.
             .setColor(15844367)
@@ -214,27 +241,47 @@ client.on('messageReactionAdd', async(reaction, user) => {
             .setImage(image);
           await starChannel.send({ embed });
         }
-
     }
+    //User removes a star
     client.on('messageReactionRemove', async(reaction, user) => {
+     
         this.client = client;
-        
         const message = reaction.message;
-        //if (message.author.id === user.id) return;
-        
+        if (message.author.id === user.id) return;
+        //ignores if the reaction isn't a star
         if (reaction.emoji.name !== '⭐') return;
-        
+        //finds and names the starboard channel
         const starChannel = message.guild.channels.find('name','starboard');
         const fetchedMessages = await starChannel.fetchMessages({ limit: 100 });
-        
-        const stars = fetchedMessages.find(m => m.embeds[0].footer.text.startsWith('⭐') && m.embeds[0].footer.text.endsWith(reaction.message.id));
-        
-        if (stars) {
-             
+        //searches message
+        const stars = fetchedMessages.find(m => m.embeds[0].footer.text.startsWith('⭐') && m.embeds[0].footer.text.endsWith(reaction.message.id)); 
+        if (stars) { 
           const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.embeds[0].footer.text);
           const foundStar = stars.embeds[0];
           const image = message.attachments.size > 0 ? await this.extension(reaction, message.attachments.array()[0].url) : '';
           
+            //user removes a star
+          sql.get(`SELECT * FROM scores WHERE userId ="${user.id}"`).then(row => {
+            if (row) {
+              console.log('taking bucks for starz')
+              const curPts = parseInt(row.points, 10);
+              const newPts = curPts - 100;
+              sql.run(`UPDATE scores SET points = ${newPts} WHERE userId = ${user.id}`);
+              botlog.send(`100 Buddybucks removed from ${user.tag} for getting a star removed. They have a balance of ${newPts} buddybucks. SAD`);
+            } else {
+              message.reply(`The user ${user.tag} doesn't have a scores account! Creating one now...`);
+              sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [user.id, 0]);
+              message.reply('Account created.');
+            }
+          })
+            .catch(err => {
+              if (err) console.error(`${err} \n${err.stack}`);
+              sql.run('CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER)').then(() => {
+                sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [user.id, 0]);
+                message.reply('Table did not exist, user inserted into new table.');
+              });
+            });
+            
           const embed = new RichEmbed()
             .setColor(foundStar.color)
             .setDescription(foundStar.description)
@@ -249,35 +296,139 @@ client.on('messageReactionAdd', async(reaction, user) => {
           console.log(chalk.red('removed a post'));
         }
     });
-
 });
-
-
-
-client.on('message', msg => {
-    if (msg.author.bot) return; // Ignore bots.
-    if (msg.channel.type === "dm") return; // Ignore DM channels.
-    if (msg.content === '!h') {
-         msg.channel.fetchMessages({limit: 100}).then(messages => message.channel.bulkDelete(messages));
-    }
-});
-
 
 
 function GuildName(guild) {
     return "Guild" + guild.replace(/[^a-zA-Z ]/g, "");
 }
 
-function writeLeaderboards() {
-    const starboard = reaction.message.guild.channels.find('name', 'hall-of-fame');
-    var embed = new Discord.RichEmbed()
-        .setAuthor(`Hall of fame nomination with ${starCount} stars`)
-        .addField(`Author:`, reaction.message.author.username)
-        .addField('Message:', reaction.message.content)
-        .setImage(reaction.message.author.avatarURL)
-        .setFooter('Upvote this message using the ⭐ emoji!')
-    starboard.send({embed});
+
+
+
+client.on("message", message => {
+  const prefix="+"
+  if (message.author.bot) return;
+  if (message.channel.type !== "text") return;
+
+  sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}"`).then(row => {
+    if (!row) {
+      sql.run("INSERT INTO scores (userId, points, level) VALUES (?, ?, ?)", [message.author.id, 100, 0]);
+    } else {
+      let curLevel = Math.floor(0.1 * Math.sqrt(row.points + 1));
+      if (curLevel > row.level) {
+        row.level = curLevel;
+        sql.run(`UPDATE scores SET points = ${row.points + 1}, level = ${row.level} WHERE userId = ${message.author.id}`);
+        message.reply(`You've leveled up to level **${curLevel}**! Ain't that dandy?`);
+      }
+      sql.run(`UPDATE scores SET points = ${row.points + 1} WHERE userId = ${message.author.id}`);
+    }
+  }).catch(() => {
+    console.error;
+    sql.run("CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER, level INTEGER)").then(() => {
+      sql.run("INSERT INTO scores (userId, points, level) VALUES (?, ?, ?)", [message.author.id, 100, 0]);
+    });
+  });
+});
+
+
+
+client.on('messageReactionAdd', async(reaction, user) => {
+
+    const guild = GuildName(reaction.message.guild.name);
+    const message = reaction.message;
+
+    if (reaction.emoji.name === '⬆') {
+        console.log(chalk.blue(`Found an ups!`));
+        //checks if you're staring your own messages.
+        if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ups your own messages.`);
+        //checks if you're staring a bot message
+        if (message.author.bot) return message.channel.send(`${user}, you cannot ups bot messages.`);
+    
+        sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}"`).then(row => {
+            if (row) {
+              
+              console.log('giving bucks for ups')
+              const curPts = parseInt(row.points, 10);
+              const newPts = curPts + 10;
+              sql.run(`UPDATE scores SET points = ${newPts} WHERE userId = ${message.author.id}`);
+              //message.reply(`10 Buddybucks awarded to ${message.author.tag} for getting an ups!`);
+              botlog.send(`10 Buddybucks awarded to ${message.author.tag} for getting an ups. They have a balance of ${newPts} buddybucks`);
+            }else{
+              message.reply(`The user ${message.author.tag} doesn't have a scores account! Creating one now...`);
+              sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [message.author.id, 10]);
+              message.reply('Account created.');
+            }
+          }).catch(err => {
+              if (err) console.error(`${err} \n${err.stack}`);
+              sql.run('CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER)').then(() => {
+                sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [message.author.id, 10]);
+                message.reply('Table did not exist, user inserted into new table.');
+              });
+            });
+            
+    }//end of add karma
+
+    if (reaction.emoji.name === '⬇') {
+    console.log(chalk.blue(`Found an downs`));
+    //checks if you're staring your own messages.
+    if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ⬇ your own messages.`);
+    //checks if you're staring a bot message
+    if (message.author.bot) return message.channel.send(`${user}, you cannot ⬇ bot messages.`);
+     const botlog= client.channels.find('name','bot-logs');
+        sql.get(`SELECT * FROM scores WHERE userId ="${user.id}"`).then(row => {
+            if (row) {
+              console.log('taking bucks for downs')
+              const curPts = parseInt(row.points, 10);
+              const newPts = curPts - 10;
+              sql.run(`UPDATE scores SET points = ${newPts} WHERE userId = ${user.id}`);
+              botlog.send(`10 Buddybucks removed from ${user.tag} for getting a down. They have a balance of ${newPts} buddybucks. SAD`);
+            } else {
+              message.reply(`The user ${user.tag} doesn't have a scores account! Creating one now...`);
+              sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [user.id, 0]);
+              message.reply('Account created.');
+            }
+          })
+            .catch(err => {
+              if (err) console.error(`${err} \n${err.stack}`);
+              sql.run('CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER)').then(() => {
+                sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [user.id, 0]);
+                message.reply('Table did not exist, user inserted into new table.');
+              });
+            });
+    }//end of remove karma
+})// end of karma
+
+process.on('unhandledRejection', err => {
+  console.error(`Uncaught Promise Error: \n${err.stack}`);
+});
+client.login(config.token);
+
+function addPoints(amount, message, author){
+    sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}"`).then(row => {
+
+        if (row) {
+          
+          const curPts = parseInt(row.points, 10);
+          const newPts = curPts - amount;
+
+          sql.run(`UPDATE scores SET points = ${newPts} WHERE userId = ${message.author.id}`);
+
+          botlog.send(`${amount} Buddybucks removed from ${message.author.tag}. They have a balance of ${newPts} buddybucks.`);
+
+        } else {
+          message.reply(`The user ${message.author.tag} doesn't have a scores account! Creating one now...`);
+          sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [message.author.id, 0]);
+          message.reply('Account created.');
+        }
+      })
+        .catch(err => {
+          if (err) console.error(`${err} \n${err.stack}`);
+          sql.run('CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER)').then(() => {
+            sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [message.author.id, 0]);
+            message.reply('Table did not exist, user inserted into new table.');
+          });
+        });
+   
 }
 
-
-client.login(config.token);

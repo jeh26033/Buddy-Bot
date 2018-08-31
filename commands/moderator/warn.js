@@ -36,6 +36,8 @@ module.exports = class WarnCommand extends Command {
   
 
   run(message, args) {
+    const botlog=this.client.channels.find('name','bot-logs');
+
     console.log('verifying persimmons')
     if(!message.member.hasPermission('MANAGE_ROLES')) return message.say('You have no power here!');
     console.log('sending warning');
@@ -45,7 +47,7 @@ module.exports = class WarnCommand extends Command {
     Staff member: ${message.author.tag}
     Reason: "${args.reason}"`).catch(console.error);
     
-    
+    botlog.send(`${message.author.tag} warned ${args.user}, better watch out or nothing will happen`);
  
   }
   

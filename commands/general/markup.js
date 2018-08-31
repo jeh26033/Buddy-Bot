@@ -17,10 +17,12 @@ module.exports = class MarkdownCommand extends Command {
         });
     }
     run(message) {
+      const botlog=this.client.channels.find('name','bot-logs');
+      botlog.send('Markdown used');
       console.log('Spreading lovely markdowns');
       const embed = {
         "title": "Mark downs",
-        "description": "```A nice list of simple markdowns```",
+        
         "color": 9442302,
         "fields": [
           {

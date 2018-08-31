@@ -1,3 +1,25 @@
+```````V 3.0 `````````
+hey we're back after a decidedly unfortunate situation. Doesn't matter, that's behind us now! Buddy's back, and he's got some new tricks.
+
+NEW FOR VERSION 3 ! BUDDYCOIN
+
+your new favorite cryptocoin, buddy coin is a karma that you earn by interacting with the community! you get a single coin for every message you send anywhere in the server! You can also use the :up_arrow: and :down_arrow: on comments you like or dislike to add or subtract 10 buddy coins from the authors total! If you're really lucky, you can get 100 buddycoins if someone stars your post! WOW! 
+
+Now what good are coins if you have nothing to spend them on? That's a good question! Right now, coins can be spent on some of the memey commands buddy offers, like kill, and hug. Coins also determine your level! COOL! so, to recap:
+
++1 coin per message you send
+
++10/-10 per up or down arrow respectively
+
++100 coins for a starred message
+
+you can also lend another use coins using the give command. be careful though, you'll be giving them your hard earned coin.
+
+you can view current offerings using the 'store' command! 
+
+
+
+~~~~~~~V 2.0 ~~~~~~~~
 Cat: added cat command, to produce a random cat picture! (there's around 200 different cat picture, and a surprise!)
 
 Schedule: added the beginning of an idea for future dota tournies. 
