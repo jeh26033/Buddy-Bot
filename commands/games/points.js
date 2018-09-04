@@ -28,8 +28,7 @@ module.exports = class PointsCommand extends Command {
 
     run(message, args) {
       let score = this.client.getScore.get(message.author.id, message.guild.id);
-      let curLevel = Math.floor(0.1 * Math.sqrt(score.points+1));
-      const karmicPower = curLevel * 5;
+
     // If the score doesn't exist (new user), initialize with defaults. 
     if (!score) {
       score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
