@@ -1,6 +1,6 @@
 const { Command } = require('discord.js-commando');
-const sql = require("sqlite");
-sql.open("./score.sqlite"); 
+const SQLite = require("better-sqlite3");
+const sql = new SQLite('./scores.sqlite');
 module.exports = class StoreCommand extends Command {
     constructor(client) {
         super(client, {
@@ -17,11 +17,15 @@ module.exports = class StoreCommand extends Command {
     run(message) {
        
 	console.log('checking levels');
-	sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}"`).then(row => {
-		if (!row) return message.reply("Your current level is 0");
+	 let score = this.client.getScore.get(message.author.id, message.guild.id);
+
+    // If the score doesn't exist (new user), initialize with defaults. 
+
+ 
+	
 			message.reply({embed: {
 			color: 3447003,
-			description: `Your current level is **${row.level}**, you have **${row.points}** buddybucks`,
+			description: `Your current level is **${score.level}**, you have **${score.points}** buddybucks`,
 			title:"World Famous buddybuck Store!",
 			fields: [{
 				
@@ -33,16 +37,12 @@ module.exports = class StoreCommand extends Command {
 		        value: "120 Buddybucks"
 		      },
 		      {
-		        name: "story",
-		        value: "1,000 Buddybucks"
-		      },
-		      {
 		        name: "Sensual Story",
 		        value: "100,000 Buddybucks"
 		      }
 		    ]
 			}});
 
-		});//end of if
+		};//end of if
 	}//end of run
-}// end of command
+
