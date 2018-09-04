@@ -1,6 +1,8 @@
 const { Command } = require('discord.js-commando');
-const sql = require("sqlite");
-sql.open("./score.sqlite"); 
+//const sql = require("sqlite");
+//sql.open("./score.sqlite"); 
+const SQLite = require("better-sqlite3");
+const sql = new SQLite('./scores.sqlite');
 module.exports = class PointsCommand extends Command {
     constructor(client) {
         super(client, {
@@ -25,8 +27,22 @@ module.exports = class PointsCommand extends Command {
       }
 
     run(message, args) {
-       
-      if (args.user === ' ') {
+      let score = this.client.getScore.get(message.author.id, message.guild.id);
+      let curLevel = Math.floor(0.1 * Math.sqrt(score.points+1));
+      const karmicPower = curLevel * 5;
+    // If the score doesn't exist (new user), initialize with defaults. 
+    if (!score) {
+      score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+    }
+      return message.reply({embed: {
+            color: 3447003,
+            description: `You Currently Have **${score.points}** Buddybucks And Are Level **${score.level}**`
+          }});
+          
+     
+          
+ 
+     /* if (args.user === ' ') {
         sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}"`).then(row => {
           if (!row) {
             message.say('You don\'t have a bank account! Creating one now...');
@@ -58,7 +74,7 @@ module.exports = class PointsCommand extends Command {
           }});
           
         });
-      }
+      }*/
           
   }//end of run
 }

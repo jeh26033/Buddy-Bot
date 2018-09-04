@@ -14,7 +14,8 @@
  */
 
 const Discord = require('discord.js');
-
+const SQLite = require("better-sqlite3");
+const sql = new SQLite('./scores.sqlite');
 const path = require('path');
 const commando = require('discord.js-commando');
 const { Command } = require('discord.js-commando');
@@ -36,7 +37,7 @@ const { RichEmbed } = require('discord.js');
 //heroku ports and such.
 const host = '0.0.0.0';
 const port = process.env.PORT || 3000;
-
+const commandprefix ='!';
 // client set up and settings
 const client = new commando.Client({
     commandPrefix: '!',
@@ -63,8 +64,8 @@ client.registry
 
 console.log(chalk.green('Commando set up.'));
 console.log('Awaiting log in.');
-const sql = require("sqlite");
-sql.open("./score.sqlite");
+//const sql = require("sqlite");
+//sql.open("./score.sqlite");
 
 
 //reaction for starboard
@@ -109,6 +110,73 @@ client.dispatcher.addInhibitor(msg => {
 
 
 
+client.on("ready", () => {
+  // Check if the table "points" exists.
+  const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
+  if (!table['count(*)']) {
+    // If the table isn't there, create it and setup the database correctly.
+    sql.prepare("CREATE TABLE scores (id TEXT PRIMARY KEY, user TEXT, guild TEXT, points INTEGER, level INTEGER);").run();
+    // Ensure that the "id" row is always unique and indexed.
+    sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (id);").run();
+    sql.pragma("synchronous = 1");
+    sql.pragma("journal_mode = wal");
+  }
+    // And then we have two prepared statements to get and set the score data.
+  client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
+  client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level) VALUES (@id, @user, @guild, @points, @level);");
+});
+
+
+client.on("message", message => {
+let score;
+
+
+  if (message.guild) {
+
+    // Try to get the current user's score. 
+    score = client.getScore.get(message.author.id, message.guild.id);
+    
+    // If the score doesn't exist (new user), initialize with defaults. 
+    if (!score) {
+      score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+    }
+    score.points++;
+    // Increment points.
+   
+    
+    // Calculate the current level through MATH OMG HALP.
+    let curLevel = Math.floor(0.1 * Math.sqrt(score.points+1));
+    
+    
+    // Check if the user has leveled up, and let them know if they have:
+    if(score.level < curLevel) {
+      score.level = curLevel;
+      // Level up!
+      if(curLevel < 5);
+        message.reply(`You've leveled up to level **${curLevel}**! Still a wee baby!`);
+      if (curLevel >5 ) {
+        message.reply(`You've leveled up to level **${curLevel}**! Getting Bigger!`)
+      }
+      if (curLevel >10) {
+        message.reply(`You've leveled up to level **${curLevel}**! Now you're just showing off.`)
+      }
+    }
+    
+    
+
+   
+    
+    // Save data to the sqlite table. 
+    // This looks super simple because it's calling upon the prepared statement!
+    client.setScore.run(score);
+  }
+    
+  // if (message.content.startsWith(commandprefix + "points")) {
+
+    //return message.reply(`You currently have ${score.points} points and are level ${score.level}!`);
+  //}
+});//message
+
 client.on('ready', () => {
     console.log(chalk.magenta(`Logged in as ${client.user.tag}!`));
     client.user.setActivity("with my code");
@@ -147,17 +215,67 @@ client.on('commandRun', (command, promise, msg) => {
     }
 })
 
-//super cool starboard
+//super cool Reactions!
 
 client.on('messageReactionAdd', async(reaction, user) => {
+let message = reaction.message;
+let score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+var curLevel=score.level
+var karmicPower = 20; 
+
+    
+    
+    //karma
     const botlog= client.channels.find('name','bot-logs');
+    if (reaction.emoji.name === '⬆') {
+    console.log(chalk.blue(`Found an ups!`));
+    //checks if you're staring your own messages.
+    //if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ups your own messages.`);
+    //checks if you're staring a bot message
+    if (message.author.bot) return message.channel.send(`${user}, you cannot ups bot messages.`);
+
+    score = client.getScore.get(message.author.id, message.guild.id);
+        let curLevel=score.level
+       
+        // If the score doesn't exist (new user), initialize with defaults. 
+        if (!score) {
+       
+        }
+        const curPts = score.points;
+        console.log(score.karmicPower);
+        score.points += karmicPower;
+        botlog.send(`${karmicPower} Buddybucks added to ${message.author.tag}. You have a balance of ${score.points} buddybucks for ups`);
+        client.setScore.run(score)
+        
+    }//end of add karma
+
+    if (reaction.emoji.name === '⬇') {
+    console.log(chalk.blue(`Found an downs`));
+    //checks if you're staring your own messages.
+    //if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ⬇ your own messages.`);
+    //checks if you're staring a bot message
+    if (message.author.bot) return message.channel.send(`${user}, you cannot ⬇ bot messages.`);
+     
+     score = client.getScore.get(message.author.id, message.guild.id);
+
+          // If the score doesn't exist (new user), initialize with defaults. 
+          if (!score) {
+            score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+          }
+          const curPts = score.points;
+          score.points -= karmicPower;
+          botlog.send(`${karmicPower} Buddybucks removed from ${message.author.tag}. You have a balance of ${score.points} buddybucks for downs`);
+          client.setScore.run(score)
+
+    }//end of remove karma
     if (reaction.emoji.name === '⭐') {
+        
         this.client = client;
         console.log(chalk.yellow(`Found a Star!`));
         const guild = GuildName(reaction.message.guild.name);
         const message = reaction.message;
         //checks if you're staring your own messages.
-        if (message.author.id === user.id) return message.channel.send(`${user}, you cannot star your own messages.`);
+        //if (message.author.id === user.id) return message.channel.send(`${user}, you cannot star your own messages.`);
         //checks if you're staring a bot message
         if (message.author.bot) return message.channel.send(`${user}, you cannot star bot messages.`);
         const starChannel = message.guild.channels.find('name','starboard');
@@ -170,134 +288,161 @@ client.on('messageReactionAdd', async(reaction, user) => {
         const stars = fetch.find(m => m.embeds[0].footer.text.startsWith('⭐') && m.embeds[0].footer.text.endsWith(message.id)); 
         
 
-        if (stars) {
-            // Regex to check how many stars the embed has.
-            const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.embeds[0].footer.text);
-
-            // A variable that allows us to use the color of the pre-existing embed.
-            const foundStar = stars.embeds[0];
-
-            // We use the this.extension function to see if there is anything attached to the message.
-            const image =  message.attachments.size > 0 ? message.attachments.array()[0].url : ''; 
-            
-            const embed = new RichEmbed()
-                .setColor(foundStar.color)
-                .setDescription(foundStar.description)
-                .setAuthor(message.author.tag, message.author.displayAvatarURL)
-                .setTimestamp()
-                .setFooter(`⭐ ${parseInt(star[1])+1} | ${message.id}`)
-                .setImage(image);
-                // We fetch the ID of the message already on the starboard.
-                const starMsg = await starChannel.fetchMessage(stars.id);
-                // And now we edit the message with the new embed!
-                await starMsg.edit({ embed }); 
-        }
-
-        // Now we use an if statement for if a message isn't found in the starboard for the message.
-        if (!stars) {
-          
-          console.log('A new Star message!');
-          const image =  message.attachments.size > 0 ? message.attachments.array()[0].url : ''; 
-          // If the message is empty, we don't allow the user to star the message.
-          if (image === '' && message.cleanContent.length < 1) return message.channel.send(`${user}, you cannot star an empty message.`); 
-          message.channel.send('The message has been added to the Starchannel!');
-          //star alert!
-          //message.author.send('you had a post starred!');
-
-          // gives user 100 buddybucks
-          sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}"`).then(row => {
-            if (row) {
-              console.log('giving bucks for starz')
-              const curPts = parseInt(row.points, 10);
-              const newPts = curPts + 100;
-              sql.run(`UPDATE scores SET points = ${newPts} WHERE userId = ${message.author.id}`);
-              message.reply(`100 Buddybucks awarded to ${message.author.tag} for getting a star!`);
-              botlog.send(`100 Buddybucks awarded to ${message.author.tag} for getting a star. They have a balance of ${newPts} buddybucks`);
-            } else {
-              message.reply(`The user ${message.author.tag} doesn't have a scores account! Creating one now...`);
-              sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [message.author.id, 100]);
-              message.reply('Account created.');
-            }
-          })
-            .catch(err => {
-              if (err) console.error(`${err} \n${err.stack}`);
-              sql.run('CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER)').then(() => {
-                sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [message.author.id, 0]);
-                message.reply('Table did not exist, user inserted into new table.');
-              });
-            });
-
-          const embed = new RichEmbed()
-            // We set the color to a nice yellow here.
-            .setColor(15844367)
-            // Here we use cleanContent, which replaces all mentions in the message with their
-            // equivalent text. For example, an @everyone ping will just display as @everyone, without tagging you!
-            // At the date of this edit (09/06/18) embeds do not mention yet.
-            // But nothing is stopping Discord from enabling mentions from embeds in a future update.
-            .setDescription(message.cleanContent) 
-            .setAuthor(message.author.tag, message.author.displayAvatarURL)
-            .setTimestamp(new Date())
-            .setFooter(`⭐ 1 | ${message.id}`)
-            .setImage(image);
-          await starChannel.send({ embed });
-        }
-    }
-    //User removes a star
-    client.on('messageReactionRemove', async(reaction, user) => {
-     
-        this.client = client;
-        const message = reaction.message;
-        if (message.author.id === user.id) return;
-        //ignores if the reaction isn't a star
-        if (reaction.emoji.name !== '⭐') return;
-        //finds and names the starboard channel
-        const starChannel = message.guild.channels.find('name','starboard');
-        const fetchedMessages = await starChannel.fetchMessages({ limit: 100 });
-        //searches message
-        const stars = fetchedMessages.find(m => m.embeds[0].footer.text.startsWith('⭐') && m.embeds[0].footer.text.endsWith(reaction.message.id)); 
-        if (stars) { 
+      if (stars) {
+          // Regex to check how many stars the embed has.
           const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.embeds[0].footer.text);
+
+          // A variable that allows us to use the color of the pre-existing embed.
           const foundStar = stars.embeds[0];
-          const image = message.attachments.size > 0 ? await this.extension(reaction, message.attachments.array()[0].url) : '';
+
+          // We use the this.extension function to see if there is anything attached to the message.
+          const image =  message.attachments.size > 0 ? message.attachments.array()[0].url : ''; 
+          const curPts = score.points;
+          if (!score) {
+            score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+          }
+        score.points += 100;
+        botlog.send(`100 Buddybucks added to ${message.author.tag}. You have a balance of ${score.points} buddybucks for a star!`);
+        this.client.setScore.run(score);
           
-            //user removes a star
-          sql.get(`SELECT * FROM scores WHERE userId ="${user.id}"`).then(row => {
-            if (row) {
-              console.log('taking bucks for starz')
-              const curPts = parseInt(row.points, 10);
-              const newPts = curPts - 100;
-              sql.run(`UPDATE scores SET points = ${newPts} WHERE userId = ${user.id}`);
-              botlog.send(`100 Buddybucks removed from ${user.tag} for getting a star removed. They have a balance of ${newPts} buddybucks. SAD`);
-            } else {
-              message.reply(`The user ${user.tag} doesn't have a scores account! Creating one now...`);
-              sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [user.id, 0]);
-              message.reply('Account created.');
-            }
-          })
-            .catch(err => {
-              if (err) console.error(`${err} \n${err.stack}`);
-              sql.run('CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER)').then(() => {
-                sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [user.id, 0]);
-                message.reply('Table did not exist, user inserted into new table.');
-              });
-            });
-            
           const embed = new RichEmbed()
-            .setColor(foundStar.color)
-            .setDescription(foundStar.description)
-            .setAuthor(message.author.tag, message.author.displayAvatarURL)
-            .setTimestamp()
-            .setFooter(`⭐ ${parseInt(star[1])-1} | ${message.id}`)
-            .setImage(image);
-          const starMsg = await starChannel.fetchMessage(stars.id);
-          await starMsg.edit({ embed });
-          console.log(chalk.red('removed a star'));
-          if(parseInt(star[1]) - 1 == 0) return starMsg.delete(1000);
-          console.log(chalk.red('removed a post'));
-        }
-    });
+              .setColor(foundStar.color)
+              .setDescription(foundStar.description)
+              .setAuthor(message.author.tag, message.author.displayAvatarURL)
+              .setTimestamp()
+              .setFooter(`⭐ ${parseInt(star[1])+1} | ${message.id}`)
+              .setImage(image);
+              // We fetch the ID of the message already on the starboard.
+              const starMsg = await starChannel.fetchMessage(stars.id);
+              // And now we edit the message with the new embed!
+              await starMsg.edit({ embed }); 
+      }
+
+    // Now we use an if statement for if a message isn't found in the starboard for the message.
+    if (!stars) {
+      
+      console.log('A new Star message!');
+      const image =  message.attachments.size > 0 ? message.attachments.array()[0].url : ''; 
+      // If the message is empty, we don't allow the user to star the message.
+      if (image === '' && message.cleanContent.length < 1) return message.channel.send(`${user}, you cannot star an empty message.`); 
+      message.channel.send('The message has been added to the Starchannel!');
+      //star alert!
+      //message.author.send('you had a post starred!');
+
+      // gives user 100 buddybucks
+      score = client.getScore.get(message.author.id, message.guild.id);
+
+      // If the score doesn't exist (new user), initialize with defaults. 
+      if (!score) {
+        score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+      }
+      score.points += 100;
+      botlog.send(`100 Buddybucks added to ${message.author.tag}. You have a balance of ${score.points} buddybucks for a star!`);
+      this.client.setScore.run(score);
+      const embed = new RichEmbed()
+        // We set the color to a nice yellow here.
+        .setColor(15844367)
+        // Here we use cleanContent, which replaces all mentions in the message with their
+        // equivalent text. For example, an @everyone ping will just display as @everyone, without tagging you!
+        // At the date of this edit (09/06/18) embeds do not mention yet.
+        // But nothing is stopping Discord from enabling mentions from embeds in a future update.
+        .setDescription(message.cleanContent) 
+        .setAuthor(message.author.tag, message.author.displayAvatarURL)
+        .setTimestamp(new Date())
+        .setFooter(`⭐ 1 | ${message.id}`)
+        .setImage(image);
+      await starChannel.send({ embed });
+    }
+  }
 });
 
+//User removes a star
+client.on('messageReactionRemove', async(reaction, user) => {
+    let score;
+    let message = reaction.message;
+    // Try to get the current user's score. 
+
+
+    //karma
+
+    const botlog= client.channels.find('name','bot-logs');
+    if (reaction.emoji.name === '⬆') {
+    console.log(chalk.blue(`Found an ups!`));
+    //checks if you're staring your own messages.
+    //if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ups your own messages.`);
+    //checks if you're staring a bot message
+    if (message.author.bot) return message.channel.send(`${user}, you cannot ups bot messages.`);
+
+    score = client.getScore.get(message.author.id, message.guild.id);
+      // If the score doesn't exist (new user), initialize with defaults. 
+      if (!score) {
+        score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+      }
+      const curPts = score.points;
+      console.log(score.points);
+      score.points -= 20;
+      client.setScore.run(score)
+        
+    }//end of add karma
+
+    if (reaction.emoji.name === '⬇') {
+    console.log(chalk.blue(`Found an downs`));
+    //checks if you're karma'ing your own messages.
+    //if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ⬇ your own messages.`);
+    //checks if you're karma'ing a bot message
+    if (message.author.bot) return message.channel.send(`${user}, you cannot ⬇ bot messages.`);
+     
+    score = client.getScore.get(message.author.id, message.guild.id);
+      // If the score doesn't exist (new user), initialize with defaults. 
+      if (!score) {
+        score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+      }
+      const curPts = score.points;
+      console.log(score.points);
+
+      score.points += 20;
+      client.setScore.run(score)
+
+    }//end of remove karma
+
+    this.client = client;
+    if (message.author.id === user.id) return;
+    //ignores if the reaction isn't a star
+    if (reaction.emoji.name !== '⭐') return;
+    //finds and names the starboard channel
+
+    const starChannel = message.guild.channels.find('name','starboard');
+    const fetchedMessages = await starChannel.fetchMessages({ limit: 100 });
+    //searches message
+    const stars = fetchedMessages.find(m => m.embeds[0].footer.text.startsWith('⭐') && m.embeds[0].footer.text.endsWith(reaction.message.id)); 
+    if (stars) { 
+      const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.embeds[0].footer.text);
+      const foundStar = stars.embeds[0];
+      const image = message.attachments.size > 0 ? await this.extension(reaction, message.attachments.array()[0].url) : '';
+      score = client.getScore.get(message.author.id, message.guild.id);
+      //user removes a star
+      // If the score doesn't exist (new user), initialize with defaults. 
+      if (!score) {
+        score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+      }
+      const curPts = score.points;
+      score.points -= 100;
+      this.client.setScore.run(score)
+      //end of score keeping
+      const embed = new RichEmbed()
+        .setColor(foundStar.color)
+        .setDescription(foundStar.description)
+        .setAuthor(message.author.tag, message.author.displayAvatarURL)
+        .setTimestamp()
+        .setFooter(`⭐ ${parseInt(star[1])-1} | ${message.id}`)
+        .setImage(image);
+      const starMsg = await starChannel.fetchMessage(stars.id);
+      await starMsg.edit({ embed });
+      console.log(chalk.red('removed a star'));
+      if(parseInt(star[1]) - 1 == 0) return starMsg.delete(1000);
+      console.log(chalk.red('removed a post'));
+    }
+});
 
 function GuildName(guild) {
     return "Guild" + guild.replace(/[^a-zA-Z ]/g, "");
@@ -306,19 +451,19 @@ function GuildName(guild) {
 
 
 
-client.on("message", message => {
+/*client.on("message", message => {
   const prefix="+"
   if (message.author.bot) return;
   if (message.channel.type !== "text") return;
 
   sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}"`).then(row => {
     if (!row) {
-      sql.run("INSERT INTO scores (userId, points, level) VALUES (?, ?, ?)", [message.author.id, 100, 0]);
+      sql.run("INSERT INTO scores (userId, points, level, username) VALUES (?, ?, ?,?)", [message.author.id, 100, 0,message.author.username]);
     } else {
       let curLevel = Math.floor(0.1 * Math.sqrt(row.points + 1));
       if (curLevel > row.level) {
         row.level = curLevel;
-        sql.run(`UPDATE scores SET points = ${row.points + 1}, level = ${row.level} WHERE userId = ${message.author.id}`);
+        sql.run(`UPDATE scores SET points = ${row.points + 1}, level = ${row.level}, username=${message.author.username}, WHERE userId = ${message.author.id}`);
         message.reply(`You've leveled up to level **${curLevel}**! Ain't that dandy?`);
       }
       sql.run(`UPDATE scores SET points = ${row.points + 1} WHERE userId = ${message.author.id}`);
@@ -330,105 +475,27 @@ client.on("message", message => {
     });
   });
 });
+*/
 
-
-
-client.on('messageReactionAdd', async(reaction, user) => {
-
-    const guild = GuildName(reaction.message.guild.name);
-    const message = reaction.message;
-
-    if (reaction.emoji.name === '⬆') {
-        console.log(chalk.blue(`Found an ups!`));
-        //checks if you're staring your own messages.
-        if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ups your own messages.`);
-        //checks if you're staring a bot message
-        if (message.author.bot) return message.channel.send(`${user}, you cannot ups bot messages.`);
-    
-        sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}"`).then(row => {
-            if (row) {
-              
-              console.log('giving bucks for ups')
-              const curPts = parseInt(row.points, 10);
-              const newPts = curPts + 10;
-              sql.run(`UPDATE scores SET points = ${newPts} WHERE userId = ${message.author.id}`);
-              //message.reply(`10 Buddybucks awarded to ${message.author.tag} for getting an ups!`);
-              botlog.send(`10 Buddybucks awarded to ${message.author.tag} for getting an ups. They have a balance of ${newPts} buddybucks`);
-            }else{
-              message.reply(`The user ${message.author.tag} doesn't have a scores account! Creating one now...`);
-              sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [message.author.id, 10]);
-              message.reply('Account created.');
-            }
-          }).catch(err => {
-              if (err) console.error(`${err} \n${err.stack}`);
-              sql.run('CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER)').then(() => {
-                sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [message.author.id, 10]);
-                message.reply('Table did not exist, user inserted into new table.');
-              });
-            });
-            
-    }//end of add karma
-
-    if (reaction.emoji.name === '⬇') {
-    console.log(chalk.blue(`Found an downs`));
-    //checks if you're staring your own messages.
-    if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ⬇ your own messages.`);
-    //checks if you're staring a bot message
-    if (message.author.bot) return message.channel.send(`${user}, you cannot ⬇ bot messages.`);
-     const botlog= client.channels.find('name','bot-logs');
-        sql.get(`SELECT * FROM scores WHERE userId ="${user.id}"`).then(row => {
-            if (row) {
-              console.log('taking bucks for downs')
-              const curPts = parseInt(row.points, 10);
-              const newPts = curPts - 10;
-              sql.run(`UPDATE scores SET points = ${newPts} WHERE userId = ${user.id}`);
-              botlog.send(`10 Buddybucks removed from ${user.tag} for getting a down. They have a balance of ${newPts} buddybucks. SAD`);
-            } else {
-              message.reply(`The user ${user.tag} doesn't have a scores account! Creating one now...`);
-              sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [user.id, 0]);
-              message.reply('Account created.');
-            }
-          })
-            .catch(err => {
-              if (err) console.error(`${err} \n${err.stack}`);
-              sql.run('CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER)').then(() => {
-                sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [user.id, 0]);
-                message.reply('Table did not exist, user inserted into new table.');
-              });
-            });
-    }//end of remove karma
-})// end of karma
 
 process.on('unhandledRejection', err => {
   console.error(`Uncaught Promise Error: \n${err.stack}`);
 });
 client.login(config.token);
 
-function addPoints(amount, message, author){
-    sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}"`).then(row => {
-
-        if (row) {
-          
-          const curPts = parseInt(row.points, 10);
-          const newPts = curPts - amount;
-
-          sql.run(`UPDATE scores SET points = ${newPts} WHERE userId = ${message.author.id}`);
-
-          botlog.send(`${amount} Buddybucks removed from ${message.author.tag}. They have a balance of ${newPts} buddybucks.`);
-
-        } else {
-          message.reply(`The user ${message.author.tag} doesn't have a scores account! Creating one now...`);
-          sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [message.author.id, 0]);
-          message.reply('Account created.');
-        }
-      })
-        .catch(err => {
-          if (err) console.error(`${err} \n${err.stack}`);
-          sql.run('CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER)').then(() => {
-            sql.run('INSERT INTO scores (userId, points) VALUES (?, ?)', [message.author.id, 0]);
-            message.reply('Table did not exist, user inserted into new table.');
-          });
-        });
-   
-}
+client.on("ready", () => {
+  // Check if the table "points" exists.
+  const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
+  if (!table['count(*)']) {
+    // If the table isn't there, create it and setup the database correctly.
+    sql.prepare("CREATE TABLE scores (id TEXT PRIMARY KEY, user TEXT, guild TEXT, points INTEGER, level INTEGER);").run();
+    // Ensure that the "id" row is always unique and indexed.
+    sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (id);").run();
+    sql.pragma("synchronous = 1");
+    sql.pragma("journal_mode = wal");
+  }
+    // And then we have two prepared statements to get and set the score data.
+  client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
+  client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level) VALUES (@id, @user, @guild, @points, @level);");
+});
 

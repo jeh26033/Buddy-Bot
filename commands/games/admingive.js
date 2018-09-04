@@ -1,20 +1,22 @@
 const { Command } = require('discord.js-commando');
-const sql = require("sqlite");
-sql.open("./score.sqlite"); 
-module.exports = class GivePointsCommand extends Command {
+//const sql = require("sqlite");
+//sql.open("./score.sqlite"); 
+const SQLite = require("better-sqlite3");
+const sql = new SQLite('./scores.sqlite');
+module.exports = class AdminGivePointsCommand extends Command {
     constructor(client) {
         super(client, {
-            name: 'give-buddybucks',
-            aliases: ['give', 'add-points', 'give-points'],
+            name: 'admin-give-buddybucks',
+            aliases: ['admingive', 'admin-give', 'boss-buck'],
             group: 'games',
-            memberName: 'givebuddybucks',
-            description: 'a command for giving another user buddybucks.',
+            memberName: 'admingive',
+            description: 'a command for creating buddybucks for users.',
             examples: [` give your hard earned buddybucks to your buddy!`],
             args: [{
 
             key: 'user',
             label: 'user',
-            prompt: 'What user would you like to give to? This takes from your balance! Please mention one only.',
+            prompt: 'What user would you like to give to?',
             type: 'member',
             infinite: false
           },
@@ -25,13 +27,57 @@ module.exports = class GivePointsCommand extends Command {
             type: 'float',
             infinite: false
           }],
-          guarded: true
+          guarded: true,
+
         });
+      }
+      hasPermission(msg) {
+        if (!this.client.isOwner(msg.author)) return 'You have no power here!';    
+        return this.client.isOwner(msg.author);
       }
 
   run(message, args) {
-    console.log('lets give some buddybucks!');
+    console.log('lets create inflation!!');
+    let score = this.client.getScore.get(message.author.id, message.guild.id);
+    
+    // If the score doesn't exist (new user), initialize with defaults. 
+    if (!score) {
+      score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+    }
+    
 
+    // Limited to guild owner - adjust to your own preference!
+    //if(!message.author.id === message.guild.owner) return message.reply("You're not the boss of me, you can't do that!");
+  
+    // Try to get the user from mention. If not found, get the ID given and get a user from that ID. 
+    const user = args.user;
+    if(!user) return message.reply("You must mention someone or give their ID!");
+  
+    // Read the amount of points to give to the user. 
+    const pointsToAdd = args.amount;
+    if(!pointsToAdd) return message.reply("You didn't tell me how many Buddybucks to give...");
+  
+    // Get their current points. This can't use `score` because it's not the same user ;)
+    let userscore = this.client.getScore.get(user.id, message.guild.id);
+    
+    // It's possible to give points to a user we haven't seen, so we need to initiate defaults here too!
+    if (!userscore) {
+      userscore = { id: `${message.guild.id}-${user.id}`, user: user.id, guild: message.guild.id, points: 0, level: 1 };
+    }
+    
+    // Increment the score. 
+    userscore.points += pointsToAdd;
+  
+    // We also want to update their level (but we won't notify them if it changes)
+    let userLevel = Math.floor(0.1 * Math.sqrt(score.points));
+    userscore.level = userLevel;
+  
+    // And we save it!
+    this.client.setScore.run(userscore);
+    botlog.send(`${pointsToAdd} Buddybucks added to ${user.tag}. You have a balance of ${score.points} buddybucks for a star!`);
+    return message.channel.send(`${user.tag} has received ${pointsToAdd} Buddybucks and now stands at ${userscore.points} Buddybucks.`);
+
+/*
         const botlog=this.client.channels.find('name','bot-logs');
         if (args.user.id == message.author.id)return message.reply("You can't give yourself points!");
         sql.get(`SELECT * FROM scores WHERE userId ="${args.user.id}"`).then(row => {
@@ -75,6 +121,6 @@ module.exports = class GivePointsCommand extends Command {
                 message.reply('Table did not exist, user inserted into new table.');
               });
             });
-    
+    */
   }//end of run
 }
