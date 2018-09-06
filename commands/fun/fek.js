@@ -21,7 +21,6 @@ module.exports = class FedCommand extends Command {
     https://gph.is/18VfqMH
     https://gph.is/1IF8ykO
     https://gph.is/1nc5TZu
-    https://gph.is/2mfS3KU
     https://gph.is/1SCKBl5
     https://gph.is/1OLudxc
     https://gph.is/2nqvsIF`
