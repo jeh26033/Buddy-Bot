@@ -20,7 +20,6 @@
 		"enmap-level": "^2.1.0",
 		"enmap-sqlite": "^2.0.3",
 		"express": "^4.16.3",
-		"giphy": "0.0.4",
 		"giphy-js-sdk-core": "^1.0.5",
 		"got": "^7.1.0",
 		"html2plaintext": "^2.0.1",
