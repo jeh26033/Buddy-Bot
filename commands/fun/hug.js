@@ -1,15 +1,16 @@
 const {Command} = require('discord.js-commando');
 const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
+//const sql = require("sqlite");
+//sql.open("./score.sqlite"); 
 module.exports = class HugCommand extends Command {
     constructor(client) {
         super(client, {
             name: 'hug',
-            aliases: ['hug-please', 'kiss','love-you'],
             group: 'fun',
             memberName: 'hug',
             description: 'Asks who to hug, and then sends them a nice hug. Costs 120BBs',
-            examples: ['hug @bob'],
+            examples: ['reply'],
             args:[
                 {
                     key:'user',

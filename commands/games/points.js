@@ -10,7 +10,9 @@ module.exports = class PointsCommand extends Command {
             aliases: ['check-balance','check-buddybucks','balance'],
             group: 'games',
             memberName: 'balance',
-            description: `Just want to prove youre more active than your friends? run this to find out your current balance!`,
+            description: `Just want to prove youre more active than your friends?
+                          This command allows you to check your own balance or the balance of someone else.
+                          Run \`bal\` to check your own balance or \`bal @Bob#1234\` to check someone else's.`,
             
                      
             args: [{
@@ -33,7 +35,7 @@ module.exports = class PointsCommand extends Command {
     }
       return message.reply({embed: {
             color: 3447003,
-            description: `:sparkles: You Currently Have **${score.points}** Buddybucks and are Level **${score.level}** :sparkles: `
+            description: `You Currently Have **${score.points}** Buddybucks And Are Level **${score.level}**`
           }});
           
      

@@ -37,7 +37,6 @@ module.exports = class AdminGivePointsCommand extends Command {
       }
 
   run(message, args) {
-    const botlog= client.channels.find('name','bot-logs');
     console.log('lets create inflation!!');
     let score = this.client.getScore.get(message.author.id, message.guild.id);
     
