@@ -1,6 +1,4 @@
 const {Command} = require('discord.js-commando');
-//const sql = require("sqlite");
-//sql.open("./score.sqlite"); 
 const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
 module.exports = class ShootCommand extends Command {
@@ -10,7 +8,7 @@ module.exports = class ShootCommand extends Command {
             group: 'fun',
             memberName: 'kill',
             description: 'Asks who to :gun:, and then pings them with a :gun:. Costs 100BB',
-            examples: ['reply'],
+            examples: ['kill @bob'],
             args:[
                 {
                     key:'user',
