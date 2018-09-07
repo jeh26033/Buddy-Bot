@@ -59,8 +59,12 @@ typings/
 
 # next.js build output
 .next
-
+.sqlite
+.sqlite-shm
+.sqlite-wal
 #bot token
 
 auth.json
 config.json
+*.sqlite-shm
+*.sqlite-wal
