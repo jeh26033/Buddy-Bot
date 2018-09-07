@@ -37,6 +37,10 @@ module.exports = class StoreCommand extends Command {
 		        value: "120 Buddybucks"
 		      },
 		      {
+		      	name:"covertkill",
+		      	value:"200 BuddyBucks"
+		      },
+		      {
 		        name: "Sensual Story",
 		        value: "100,000 Buddybucks"
 		      }

@@ -18,6 +18,7 @@ module.exports = class MemeCommand extends Command {
         let toMeme = `
             https://i.redd.it/0ilh488xbudz.png
             https://cdn.discordapp.com/attachments/310611569794875404/353539349742092289/image.jpg
+            https://scontent-atl3-1.cdninstagram.com/vp/dc20e9c175a1916005102ee0ff3b80d3/5C183F30/t51.2885-15/e35/39215286_253618398692475_1145614420911587328_n.jpg
             http://weknowmemes.com/wp-content/uploads/2012/02/the-internet-is-a-series-of-tubes-and-theyre-full-of-cats.jpg
             http://assets8.popbuzz.com/2017/09/shooting-stars-meme-1488215847-list-handheld-0.png
             http://imgur.com/vG98twU

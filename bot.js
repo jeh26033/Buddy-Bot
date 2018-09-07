@@ -13,12 +13,12 @@
      
  */
 
+const morse = require('morse-node').create('ITU');
 const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
 const path = require('path');
 const commando = require('discord.js-commando');
-const { Command } = require('discord.js-commando');
 const { CommandoClient, SQLiteProvider } = require('discord.js-commando');
 const { oneLine } = require('common-tags');
 const fs = require('fs');
@@ -33,6 +33,7 @@ const moment = require('moment');
 const Enmap = require("enmap");
 const EnmapLevel = require('enmap-level');
 const { RichEmbed } = require('discord.js');
+
 
 //heroku ports and such.
 const host = '0.0.0.0';
@@ -64,14 +65,9 @@ client.registry
 
 console.log(chalk.green('Commando set up.'));
 console.log('Awaiting log in.');
-//const sql = require("sqlite");
-//sql.open("./score.sqlite");
-
 
 //reaction for starboard
 var reaction = '⭐';
-
-
 //error message managment 
 client
     .on('error', e => console.error(error(e)))
@@ -111,6 +107,9 @@ client.dispatcher.addInhibitor(msg => {
 
 
 client.on("ready", () => {
+  console.log(chalk.magenta(`Logged in as ${client.user.tag}!`));
+  client.user.setActivity("with my food!");
+  console.log(chalk.green('I am ready!'));
   // Check if the table "points" exists.
   const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
   if (!table['count(*)']) {
@@ -126,13 +125,16 @@ client.on("ready", () => {
   client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level) VALUES (@id, @user, @guild, @points, @level);");
 });
 
-
+//check to see if a person is in the table after every message is sent.
 client.on("message", message => {
-let score;
-
-
+  const botwords = ["robot", "robots"];
+  if( botwords.some(word => message.content.includes(word)) ) {
+     message.react("🤖");
+    // Or just do message.delete();
+  }
+  const botlog=client.channels.find('name','bot-logs');
+  let score;
   if (message.guild) {
-
     // Try to get the current user's score. 
     score = client.getScore.get(message.author.id, message.guild.id);
     
@@ -140,9 +142,9 @@ let score;
     if (!score) {
       score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
     }
+
     score.points++;
     // Increment points.
-   
     
     // Calculate the current level through MATH OMG HALP.
     let curLevel = Math.floor(0.1 * Math.sqrt(score.points+1));
@@ -152,36 +154,30 @@ let score;
     if(score.level < curLevel) {
       score.level = curLevel;
       // Level up!
-      if(curLevel < 5);
-        message.reply(`You've leveled up to level **${curLevel}**! Still a wee baby!`);
-      if (curLevel >5 ) {
-        message.reply(`You've leveled up to level **${curLevel}**! Getting Bigger!`)
+      if(curLevel < 5){
+            message.channel.send({embed: {
+            color: 3447003,
+            description: `:sparkles: :up: You've leveled up to level **${curLevel}**! Still a wee baby! :up: :sparkles: `
+          }});
       }
+      if (curLevel >5 ) {
+            message.channel.send({embed: {
+            color: 3447003,
+            description: `:sparkles: :up: You've leveled up to level **${curLevel}**! You're growing up so fast!! :up: :sparkles: `
+          }});
+        }
       if (curLevel >10) {
-        message.reply(`You've leveled up to level **${curLevel}**! Now you're just showing off.`)
+            message.channel.send({embed: {
+            color: 3447003,
+            description: `:sparkles: :up: You've leveled up to level **${curLevel}**! WOW, now you're just showing off :up: :sparkles: `
+          }});
       }
     }
-    
-    
-
-   
-    
     // Save data to the sqlite table. 
-    // This looks super simple because it's calling upon the prepared statement!
     client.setScore.run(score);
   }
-    
-  // if (message.content.startsWith(commandprefix + "points")) {
-
-    //return message.reply(`You currently have ${score.points} points and are level ${score.level}!`);
-  //}
 });//message
 
-client.on('ready', () => {
-    console.log(chalk.magenta(`Logged in as ${client.user.tag}!`));
-    client.user.setActivity("with my code");
-    console.log(chalk.green('I am ready!'));
-});
 
 //debug messages
 client.on('commandBlocked', (msg, reason) => {
@@ -197,8 +193,21 @@ client.on('commandStatusChange', (guild, command, enabled) => {
             ${guild ? `in guild ${guild.name} (${guild.id})` : 'globally'}.
         `);
 })
+//sends command run to bot-log as well
 client.on('commandRun', (command, promise, msg) => {
     if (msg.guild) {
+       const botlog=client.channels.find('name','bot-logs');
+        botlog.send({embed: {
+            color: 3447003,
+            description: `
+            **Command ran**
+        Guild: ${msg.guild.name} (${msg.guild.id})
+        Channel: ${msg.channel.name} (${msg.channel.id})
+        User: ${msg.author.tag} (${msg.author.id})
+        Command: ${command.groupID}:${command.memberName}
+        Message: "${msg.content}"
+            `
+        }});
         console.log(`Command ran
         Guild: ${msg.guild.name} (${msg.guild.id})
         Channel: ${msg.channel.name} (${msg.channel.id})
@@ -218,19 +227,17 @@ client.on('commandRun', (command, promise, msg) => {
 //super cool Reactions!
 
 client.on('messageReactionAdd', async(reaction, user) => {
+
 let message = reaction.message;
 let score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
 var curLevel=score.level
-var karmicPower = 20; 
-
-    
-    
+var karmicPower = 20;       
     //karma
     const botlog= client.channels.find('name','bot-logs');
     if (reaction.emoji.name === '⬆') {
     console.log(chalk.blue(`Found an ups!`));
     //checks if you're staring your own messages.
-    //if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ups your own messages.`);
+    if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ups your own messages.`);
     //checks if you're staring a bot message
     if (message.author.bot) return message.channel.send(`${user}, you cannot ups bot messages.`);
 
@@ -252,7 +259,7 @@ var karmicPower = 20;
     if (reaction.emoji.name === '⬇') {
     console.log(chalk.blue(`Found an downs`));
     //checks if you're staring your own messages.
-    //if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ⬇ your own messages.`);
+    if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ⬇ your own messages.`);
     //checks if you're staring a bot message
     if (message.author.bot) return message.channel.send(`${user}, you cannot ⬇ bot messages.`);
      
@@ -264,7 +271,7 @@ var karmicPower = 20;
           }
           const curPts = score.points;
           score.points -= karmicPower;
-          botlog.send(`${karmicPower} Buddybucks removed from ${message.author.tag}. You have a balance of ${score.points} buddybucks for downs`);
+          botlog.send(`${karmicPower} Buddybucks removed from ${message.author.tag}. You have a balance of ${score.points}`);
           client.setScore.run(score)
 
     }//end of remove karma
@@ -275,10 +282,10 @@ var karmicPower = 20;
         const guild = GuildName(reaction.message.guild.name);
         const message = reaction.message;
         //checks if you're staring your own messages.
-        //if (message.author.id === user.id) return message.channel.send(`${user}, you cannot star your own messages.`);
+       // if (message.author.id === user.id) return message.channel.send(`${user}, you cannot star your own messages.`);
         //checks if you're staring a bot message
         if (message.author.bot) return message.channel.send(`${user}, you cannot star bot messages.`);
-        const starChannel = message.guild.channels.find('name','starboard');
+        const starChannel = message.guild.channels.find('name','star-channel');
 
         // If there's no starboard channel, we stop the event from running any further, and tell them that they don't have a starboard channel.
         if (!starChannel) return message.channel.send(`It appears that you do not have a \`${starboard}\` channel.`); 
@@ -325,7 +332,15 @@ var karmicPower = 20;
       const image =  message.attachments.size > 0 ? message.attachments.array()[0].url : ''; 
       // If the message is empty, we don't allow the user to star the message.
       if (image === '' && message.cleanContent.length < 1) return message.channel.send(`${user}, you cannot star an empty message.`); 
-      message.channel.send('The message has been added to the Starchannel!');
+
+      message.channel.send({embed: {
+            color: 3447003,
+            description: `:sparkles: :star: A star has been born! :star: :sparkles: `
+          }})
+        .then(msg => {
+          msg.delete(10000)
+        })
+        .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
       //star alert!
       //message.author.send('you had a post starred!');
 
@@ -356,20 +371,17 @@ var karmicPower = 20;
   }
 });
 
-//User removes a star
+//reaction removed
+
 client.on('messageReactionRemove', async(reaction, user) => {
     let score;
     let message = reaction.message;
-    // Try to get the current user's score. 
-
-
     //karma
-
     const botlog= client.channels.find('name','bot-logs');
     if (reaction.emoji.name === '⬆') {
     console.log(chalk.blue(`Found an ups!`));
     //checks if you're staring your own messages.
-    //if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ups your own messages.`);
+    if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ups your own messages.`);
     //checks if you're staring a bot message
     if (message.author.bot) return message.channel.send(`${user}, you cannot ups bot messages.`);
 
@@ -388,7 +400,7 @@ client.on('messageReactionRemove', async(reaction, user) => {
     if (reaction.emoji.name === '⬇') {
     console.log(chalk.blue(`Found an downs`));
     //checks if you're karma'ing your own messages.
-    //if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ⬇ your own messages.`);
+    if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ⬇ your own messages.`);
     //checks if you're karma'ing a bot message
     if (message.author.bot) return message.channel.send(`${user}, you cannot ⬇ bot messages.`);
      
@@ -406,12 +418,12 @@ client.on('messageReactionRemove', async(reaction, user) => {
     }//end of remove karma
 
     this.client = client;
-    if (message.author.id === user.id) return;
+    //if (message.author.id === user.id) return;
     //ignores if the reaction isn't a star
     if (reaction.emoji.name !== '⭐') return;
     //finds and names the starboard channel
 
-    const starChannel = message.guild.channels.find('name','starboard');
+    const starChannel = message.guild.channels.find('name','star-channel');
     const fetchedMessages = await starChannel.fetchMessages({ limit: 100 });
     //searches message
     const stars = fetchedMessages.find(m => m.embeds[0].footer.text.startsWith('⭐') && m.embeds[0].footer.text.endsWith(reaction.message.id)); 
@@ -449,53 +461,11 @@ function GuildName(guild) {
 }
 
 
-
-
-/*client.on("message", message => {
-  const prefix="+"
-  if (message.author.bot) return;
-  if (message.channel.type !== "text") return;
-
-  sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}"`).then(row => {
-    if (!row) {
-      sql.run("INSERT INTO scores (userId, points, level, username) VALUES (?, ?, ?,?)", [message.author.id, 100, 0,message.author.username]);
-    } else {
-      let curLevel = Math.floor(0.1 * Math.sqrt(row.points + 1));
-      if (curLevel > row.level) {
-        row.level = curLevel;
-        sql.run(`UPDATE scores SET points = ${row.points + 1}, level = ${row.level}, username=${message.author.username}, WHERE userId = ${message.author.id}`);
-        message.reply(`You've leveled up to level **${curLevel}**! Ain't that dandy?`);
-      }
-      sql.run(`UPDATE scores SET points = ${row.points + 1} WHERE userId = ${message.author.id}`);
-    }
-  }).catch(() => {
-    console.error;
-    sql.run("CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER, level INTEGER)").then(() => {
-      sql.run("INSERT INTO scores (userId, points, level) VALUES (?, ?, ?)", [message.author.id, 100, 0]);
-    });
-  });
-});
-*/
-
-
 process.on('unhandledRejection', err => {
   console.error(`Uncaught Promise Error: \n${err.stack}`);
 });
+
+
 client.login(config.token);
 
-client.on("ready", () => {
-  // Check if the table "points" exists.
-  const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
-  if (!table['count(*)']) {
-    // If the table isn't there, create it and setup the database correctly.
-    sql.prepare("CREATE TABLE scores (id TEXT PRIMARY KEY, user TEXT, guild TEXT, points INTEGER, level INTEGER);").run();
-    // Ensure that the "id" row is always unique and indexed.
-    sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (id);").run();
-    sql.pragma("synchronous = 1");
-    sql.pragma("journal_mode = wal");
-  }
-    // And then we have two prepared statements to get and set the score data.
-  client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
-  client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level) VALUES (@id, @user, @guild, @points, @level);");
-});
 
