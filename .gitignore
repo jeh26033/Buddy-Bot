@@ -64,3 +64,5 @@ typings/
 
 auth.json
 config.json
+*.sqlite-shm
+*.sqlite-wal
