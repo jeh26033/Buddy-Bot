@@ -63,7 +63,7 @@ typings/
 .sqlite-shm
 .sqlite-wal
 #bot token
-
+responseData/library
 auth.json
 config.json
 *.sqlite-shm

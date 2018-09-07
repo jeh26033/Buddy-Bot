@@ -12,7 +12,6 @@
     10.covert kill
      
  */
-
 const morse = require('morse-node').create('ITU');
 const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
@@ -89,23 +88,6 @@ client
         `);
     })
 
-
-//settings and blacklist. Needs more work.
-
-/*
-client.dispatcher.addInhibitor(msg => {
-  const blacklist = require('./bin/blacklist.json');
-  if (blacklist.guilds.includes(msg.guild.id)) return [`Guild ${msg.guild.id} is blacklisted`, msg.channel.send('This guild has been blacklisted. Appeal here: https://discord.gg/6P6MNAU')];
-});
-client.dispatcher.addInhibitor(msg => {
-  const blacklist = require('./bin/blacklist.json');
-  if (blacklist.users.includes(msg.author.id)) return [`User ${msg.author.id} is blacklisted`, msg.reply('You have been blacklisted. Appeal here: https://discord.gg/6P6MNAU')];
-});
-
-*/ // needs more work ^^
-
-
-
 client.on("ready", () => {
   console.log(chalk.magenta(`Logged in as ${client.user.tag}!`));
   client.user.setActivity("with my food!");
@@ -114,7 +96,7 @@ client.on("ready", () => {
   const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
   if (!table['count(*)']) {
     // If the table isn't there, create it and setup the database correctly.
-    sql.prepare("CREATE TABLE scores (id TEXT PRIMARY KEY, user TEXT, guild TEXT, points INTEGER, level INTEGER);").run();
+    sql.prepare("CREATE TABLE scores (id TEXT PRIMARY KEY, user TEXT, guild TEXT, points INTEGER, level INTEGER, dotaid INTEGER);").run();
     // Ensure that the "id" row is always unique and indexed.
     sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (id);").run();
     sql.pragma("synchronous = 1");
@@ -122,13 +104,15 @@ client.on("ready", () => {
   }
     // And then we have two prepared statements to get and set the score data.
   client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
-  client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level) VALUES (@id, @user, @guild, @points, @level);");
+  client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level, dotaid) VALUES (@id, @user, @guild, @points, @level, @dotaid);");
 });
 
 //check to see if a person is in the table after every message is sent.
 client.on("message", message => {
-  const botwords = ["robot", "robots"];
-  if( botwords.some(word => message.content.includes(word)) ) {
+  const botwords = ["robot", "ultron", "robots", "bot "];
+  if(botwords.some(word => message.content.includes(word)) ) {
+   
+      //message.split(/\b/).some(word => botwords.includes(word));
      message.react("🤖");
     // Or just do message.delete();
   }
@@ -140,10 +124,15 @@ client.on("message", message => {
     
     // If the score doesn't exist (new user), initialize with defaults. 
     if (!score) {
-      score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+      //ensure buddy can't get points
+      if (message.author.bot)return
+      score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1, dotaid:null };
     }
-
+    if (message.author.bot){
+      return
+      }else{
     score.points++;
+  }
     // Increment points.
     
     // Calculate the current level through MATH OMG HALP.
@@ -282,7 +271,7 @@ var karmicPower = 20;
         const guild = GuildName(reaction.message.guild.name);
         const message = reaction.message;
         //checks if you're staring your own messages.
-       // if (message.author.id === user.id) return message.channel.send(`${user}, you cannot star your own messages.`);
+        if (message.author.id === user.id) return message.channel.send(`${user}, you cannot star your own messages.`);
         //checks if you're staring a bot message
         if (message.author.bot) return message.channel.send(`${user}, you cannot star bot messages.`);
         const starChannel = message.guild.channels.find('name','star-channel');
@@ -342,7 +331,7 @@ var karmicPower = 20;
         })
         .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
       //star alert!
-      //message.author.send('you had a post starred!');
+      message.author.send('you had a post starred!');
 
       // gives user 100 buddybucks
       score = client.getScore.get(message.author.id, message.guild.id);
@@ -357,10 +346,6 @@ var karmicPower = 20;
       const embed = new RichEmbed()
         // We set the color to a nice yellow here.
         .setColor(15844367)
-        // Here we use cleanContent, which replaces all mentions in the message with their
-        // equivalent text. For example, an @everyone ping will just display as @everyone, without tagging you!
-        // At the date of this edit (09/06/18) embeds do not mention yet.
-        // But nothing is stopping Discord from enabling mentions from embeds in a future update.
         .setDescription(message.cleanContent) 
         .setAuthor(message.author.tag, message.author.displayAvatarURL)
         .setTimestamp(new Date())
@@ -462,10 +447,12 @@ function GuildName(guild) {
 
 
 process.on('unhandledRejection', err => {
-  console.error(`Uncaught Promise Error: \n${err.stack}`);
+  console.error(`"error": \n${err.stack}`);
 });
 
 
 client.login(config.token);
 
+
+//wild dota stuff below
 
