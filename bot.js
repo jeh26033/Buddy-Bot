@@ -10,7 +10,8 @@
     8. inhouse organizer
     9. VODs by team name
     10.covert kill
-     
+    11. remove DMing from getting starred. 
+    12. make more messages remove themselves, including leaderboards.
  */
 const morse = require('morse-node').create('ITU');
 const Discord = require('discord.js');

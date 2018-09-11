@@ -12,6 +12,7 @@
 		"better-sqlite3": "^4.1.4",
 		"bufferutil": "3.0.2",
 		"chalk": "^2.1.0",
+		"commando": "0.0.2",
 		"dbots": "^1.0.1",
 		"discord.io": "github:woor/discord.io#gateway_v6",
 		"discord.js": "^11.4.0",
@@ -35,6 +36,7 @@
 		"node-pre-gyp": "^0.10.3",
 		"npm": "^6.4.1",
 		"npm-git-install": "^0.3.0",
+		"pad": "^2.2.1",
 		"random-cat": "^1.0.1",
 		"request": "^2.87.0",
 		"sequelize-cli": "^4.1.1",
@@ -44,6 +46,7 @@
 		"string-similarity": "^1.2.1",
 		"superagent": "^3.8.3",
 		"util": "^0.11.0",
+		"watcher": "0.0.5",
 		"winston": "^2.4.3"
 	}
 }

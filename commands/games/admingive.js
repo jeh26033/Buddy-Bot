@@ -1,6 +1,4 @@
 const { Command } = require('discord.js-commando');
-//const sql = require("sqlite");
-//sql.open("./score.sqlite"); 
 const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
 module.exports = class AdminGivePointsCommand extends Command {
