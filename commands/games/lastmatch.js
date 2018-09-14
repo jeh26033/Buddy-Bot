@@ -2,7 +2,7 @@ const { Command } = require('discord.js-commando');
 const Mika = require("mika");
 var mika = new Mika();
 const findHero = require("../../util/findHero");
-const findHero = require("../../util/findHero");
+
 const aliases = require("../../json/aliases.json")
 const sql = require("sqlite");
 sql.open("./score.sqlite"); 
@@ -10,10 +10,9 @@ module.exports = class LastMatchCommand extends Command {
     constructor(client) {
         super(client, {
             name: 'lastmatch',
-        
             group: 'games',
             memberName: 'lastmatch',
-            description: 'Displays Static Hero Information',
+            description: 'Displays information about your last match',
             examples: [` `],
             
      
@@ -48,10 +47,12 @@ module.exports = class LastMatchCommand extends Command {
                 let kda = `${kills}/${deaths}/${assists}`
                 console.log(match_id)
                 let hero =  aliases.find((hero) => hero.id == match.hero_id).local;
+
                 let isRadiantColor;
                 let isRadiant;
                 let victory;
                 let heroIcon =  aliases.find((hero) => hero.id == match.hero_id).emo;
+                console.log(heroIcon);
                 let ptime = `${Math.floor(match.duration / 60)}:${("00" + match.duration % 60).substr(-2, 2)}`;
                 //determines side
                 if (player_slot <= 128 ) {
