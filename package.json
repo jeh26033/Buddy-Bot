@@ -33,6 +33,7 @@
 		"moment": "^2.22.2",
 		"morse-node": "^0.1.1",
 		"nan": "^2.10.0",
+		"node-dota-api": "^5.0.1",
 		"node-pre-gyp": "^0.10.3",
 		"npm": "^6.4.1",
 		"npm-git-install": "^0.3.0",
