@@ -111,7 +111,7 @@ client.on("ready", () => {
 //check to see if a person is in the table after every message is sent.
 client.on("message", message => {
   const botwords = ["robot", "ultron", "robots", "bot "];
-  if(botwords.some(word => message.content.includes(word)) ) {
+  if(botwords.some(word => message.content.includes(word)) && !message.author.bot) {
    
       //message.split(/\b/).some(word => botwords.includes(word));
      message.react("🤖");
@@ -229,7 +229,7 @@ var karmicPower = 20;
     //checks if you're staring your own messages.
     if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ups your own messages.`);
     //checks if you're staring a bot message
-    if (message.author.bot) return message.channel.send(`${user}, you cannot ups bot messages.`);
+   // if (message.author.bot) return message.channel.send(`${user}, you cannot ups bot messages.`);
 
     score = client.getScore.get(message.author.id, message.guild.id);
         let curLevel=score.level
@@ -251,7 +251,7 @@ var karmicPower = 20;
     //checks if you're staring your own messages.
     if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ⬇ your own messages.`);
     //checks if you're staring a bot message
-    if (message.author.bot) return message.channel.send(`${user}, you cannot ⬇ bot messages.`);
+    //if (message.author.bot) return message.channel.send(`${user}, you cannot ⬇ bot messages.`);
      
      score = client.getScore.get(message.author.id, message.guild.id);
 
@@ -274,7 +274,7 @@ var karmicPower = 20;
         //checks if you're staring your own messages.
         if (message.author.id === user.id) return message.channel.send(`${user}, you cannot star your own messages.`);
         //checks if you're staring a bot message
-        if (message.author.bot) return message.channel.send(`${user}, you cannot star bot messages.`);
+       // if (message.author.bot) return message.channel.send(`${user}, you cannot star bot messages.`);
         const starChannel = message.guild.channels.find('name','star-channel');
 
         // If there's no starboard channel, we stop the event from running any further, and tell them that they don't have a starboard channel.

@@ -5,7 +5,7 @@ module.exports = class FedCommand extends Command {
   constructor(bot) {
     super(bot, {
       name: 'fuck',
-      aliases: ['fek','fuck you','fuck-you','fucking'],
+      aliases: ['fek','fuck you','fuck-you','fucking','get-fucked','getfucked','get fucked'],
       group: 'fun',
       memberName: 'fek',
       description: 'Watch your mouth',

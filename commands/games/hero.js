@@ -41,11 +41,13 @@ module.exports = class HeroCommand extends Command {
         let alias = args.hero;
 
         let res = findHero(alias);
+
         if (!res) {
             return console.log('no hero')
         }
 
         let hero_obj = heroes.find((hero) => hero.name == `npc_dota_hero_${res.name}`);
+        console.log('hero object')
         console.log(hero_obj);
         hero_obj = JSON.parse(JSON.stringify(hero_obj));
         hero_obj.abilities = hero_obj.abilities
@@ -57,9 +59,9 @@ module.exports = class HeroCommand extends Command {
             .filter((a) => a)
             .sort((a, b) => qwedfr[a.charAt(0)] - qwedfr[b.charAt(0)]);
         
-       
+      
             return(heroEmbed(client, hero_obj, message))
-     
+            
     
   }//end of run
 }

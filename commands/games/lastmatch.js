@@ -1,8 +1,9 @@
 const { Command } = require('discord.js-commando');
 const Mika = require("mika");
 var mika = new Mika();
+const hero_names = require("dotaconstants").hero_names;
 const findHero = require("../../util/findHero");
-
+const heroes = require("../../json/heroes");
 const aliases = require("../../json/aliases.json")
 const sql = require("sqlite");
 sql.open("./score.sqlite"); 
@@ -22,6 +23,7 @@ module.exports = class LastMatchCommand extends Command {
     async run(message, args, client) {
     let score = this.client.getScore.get(message.author.id, message.guild.id);
     console.log(score.dotaid);
+    console.log(findHero('batrider'));
     // If the score doesn't exist (new user), initialize with defaults. 
     if (!score.dotaid) {
       return message.say('please run the dota commmand first to enter your dota id')
@@ -35,7 +37,7 @@ module.exports = class LastMatchCommand extends Command {
             
             match= mika.getPlayerMatches(score.dotaid).then((match)=> {
                 match = match[0];
-                console.log(match)
+                //console.log(match)
                 let player_slot = match.player_slot;
                 let match_id=match.match_id;
                 let match_hero=match.hero_id;
@@ -45,14 +47,31 @@ module.exports = class LastMatchCommand extends Command {
                 let radiant_win = match.radiant_win;
                 let assists=match.assists;
                 let kda = `${kills}/${deaths}/${assists}`
-                console.log(match_id)
-                let hero =  aliases.find((hero) => hero.id == match.hero_id).local;
+                console.log(`match id: ${match_id}`)
 
+                let hero =  aliases.find((hero) => hero.id == match.hero_id).local;
+                //console.log(hero)
+                let res = findHero(hero);
+                console.log(res)
+                let hero_obj = heroes.find((hero) => hero.name == `npc_dota_hero_${res.name}`);
+                //console.log(`hero object before stringify ${hero_obj}`)
+
+                hero_obj = JSON.parse(JSON.stringify(hero_obj));
+
+                //console.log(`hero object after stringify ${hero_obj}`)
+
+                
+                console.log(hero_obj.icon);
+                //console.log(hero_icon)
                 let isRadiantColor;
                 let isRadiant;
                 let victory;
-                let heroIcon =  aliases.find((hero) => hero.id == match.hero_id).emo;
-                console.log(heroIcon);
+                let icon= `http://media.steampowered.com`+hero_obj.icon;
+                let link_url = `https://www.dotabuff.com/matches/`+match_id
+            
+               // let icon_url = `http://cdn.dota2.com${hero.icon}`;
+                
+                //console.log(icon_url);
                 let ptime = `${Math.floor(match.duration / 60)}:${("00" + match.duration % 60).substr(-2, 2)}`;
                 //determines side
                 if (player_slot <= 128 ) {
@@ -71,54 +90,37 @@ module.exports = class LastMatchCommand extends Command {
                 }else{
                     victory='Defeat';
                 }
-
+                console.log(hero.icon);
                 console.log(isRadiant)
                 message.reply({embed: {
                     color: isRadiantColor,
-                    "author": {
-                        "icon_url": `http://cdn.dota2.com${hero.icon}`
-                    },
+                    "title": `Your latest DoTA Match`,
+                    "description": `${victory}`,
+                    "url":link_url,
+                    "thumbnail": {
+                              "url": icon
+                            },
                     "fields": [{
                                 "name": `Match ID`,
                                 "value": `${match_id}`,
                                 "inline": true
                             },
                             {
-                                "name": `Victory or Defeat`,
-                                "value": `${victory}`,
-                                "inline": true
-                            }, 
-                            {
                                 "name": `Hero`,
                                 "value":`${hero}`,
-                                "icon_url": `http://cdn.dota2.com${hero.icon}`,
                                 "inline": true
                             }, {
                                 "name": `KDA`,
                                 "value": `${kda}`,
-                                "inline":false
+                                "inline":true
                             }, {
                                 "name": "Duration",
                                 "value":`${ptime}`,
-                                "inline":false
+                                "inline":true
                             }]
                 }});
    
-                /*match_id: 4113233935,
-                  player_slot: 3,
-                  radiant_win: false,
-                  duration: 3252,
-                  game_mode: 22,
-                  lobby_type: 0,
-                  hero_id: 69,
-                  start_time: 1536712777,
-                  version: 21,
-                  kills: 6,
-                  deaths: 12,
-                  assists: 15,
-                  skill: 2,
-                  leaver_status: 1,
-                  party_size: 5 */
+       
 
             }).catch((err) => console.log(err));
         }  catch (err) {
