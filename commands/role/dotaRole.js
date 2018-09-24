@@ -37,7 +37,8 @@ module.exports = class joinRoleCommand extends Command {
             
 
         };
-        msg.say({ embed });  
+        msg.say({ embed })
+        
         const botlog=this.client.channels.find('name','bot-logs');
         const DOTA2ROLE = '484056265715220480';
         const SIMGAMEROLE='476493421788528640';
@@ -61,6 +62,7 @@ module.exports = class joinRoleCommand extends Command {
                     guildMember.send('Added Dota 2 role');
                     console.log('dota role added');
                     botlog.send(`Dota role added to ${user}`);
+                    
                 }
             });
             this.client.on('messageReactionRemove', (reaction, user) => {
@@ -186,6 +188,7 @@ module.exports = class joinRoleCommand extends Command {
                 }
                 
             });
+
 
     }
 };

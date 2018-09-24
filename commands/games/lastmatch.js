@@ -23,7 +23,6 @@ module.exports = class LastMatchCommand extends Command {
     async run(message, args, client) {
     let score = this.client.getScore.get(message.author.id, message.guild.id);
     console.log(score.dotaid);
-    console.log(findHero('batrider'));
     // If the score doesn't exist (new user), initialize with defaults. 
     if (!score.dotaid) {
       return message.say('please run the dota commmand first to enter your dota id')
@@ -37,7 +36,7 @@ module.exports = class LastMatchCommand extends Command {
             
             match= mika.getPlayerMatches(score.dotaid).then((match)=> {
                 match = match[0];
-                //console.log(match)
+
                 let player_slot = match.player_slot;
                 let match_id=match.match_id;
                 let match_hero=match.hero_id;
@@ -49,30 +48,22 @@ module.exports = class LastMatchCommand extends Command {
                 let kda = `${kills}/${deaths}/${assists}`
                 console.log(`match id: ${match_id}`)
 
+                //gets some hero stuff
                 let hero =  aliases.find((hero) => hero.id == match.hero_id).local;
-                //console.log(hero)
                 let res = findHero(hero);
                 console.log(res)
                 let hero_obj = heroes.find((hero) => hero.name == `npc_dota_hero_${res.name}`);
-                //console.log(`hero object before stringify ${hero_obj}`)
-
                 hero_obj = JSON.parse(JSON.stringify(hero_obj));
 
-                //console.log(`hero object after stringify ${hero_obj}`)
-
-                
-                console.log(hero_obj.icon);
-                //console.log(hero_icon)
                 let isRadiantColor;
                 let isRadiant;
                 let victory;
                 let icon= `http://media.steampowered.com`+hero_obj.icon;
                 let link_url = `https://www.dotabuff.com/matches/`+match_id
             
-               // let icon_url = `http://cdn.dota2.com${hero.icon}`;
-                
-                //console.log(icon_url);
+                //converts duration into human time.
                 let ptime = `${Math.floor(match.duration / 60)}:${("00" + match.duration % 60).substr(-2, 2)}`;
+
                 //determines side
                 if (player_slot <= 128 ) {
                     isRadiant = true;
@@ -83,6 +74,7 @@ module.exports = class LastMatchCommand extends Command {
                     isRadiantColor= 0xf00e0e
                 }
 
+                //determines who won
                 if(isRadiant && radiant_win){
                     victory= 'Victory';
                 }else if(!isRadiant && !radiant_win){
@@ -90,8 +82,7 @@ module.exports = class LastMatchCommand extends Command {
                 }else{
                     victory='Defeat';
                 }
-                console.log(hero.icon);
-                console.log(isRadiant)
+
                 message.reply({embed: {
                     color: isRadiantColor,
                     "title": `Your latest DoTA Match`,
