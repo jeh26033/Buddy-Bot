@@ -94,7 +94,7 @@ const activities_list = [
     "Spamming Tinker",
     "Last Hitting Practice", 
     "Hi Forge",
-    "My Little Botty",
+    "I'm watching you Fushi.",
     "Human Domination Simulator",
     "The Brave Little Toaster"
     ]; // creates an arraylist containing phrases you want your bot to switch through.
@@ -130,7 +130,7 @@ client.on("message", message => {
   if(botwords.some(word => message.content.includes(word)) ) {
     if (message.author.bot) return;
       //message.split(/\b/).some(word => botwords.includes(word));
-     message.react("🤖");
+     message.react("🤖")
     // Or just do message.delete();
   }
   const botlog=client.channels.find('name','bot-logs');
@@ -505,6 +505,11 @@ process.on('unhandledRejection', err => {
 
 client.login(config.token);
 
-
+function resetBot(channel) {
+// send channel a message that you're resetting bot [optional]
+    msg.channel.send('Resetting...')
+    .then(msg => this.client.destroy())
+    .then(() => this.client.login(config.token));
+}
 //wild dota stuff below
 

@@ -61,6 +61,10 @@ module.exports = class InhouseCommand extends Command {
         //inhouse queue without pings
         let dotaBoysNameArray=[]
 
+        //current list message
+        let currentList= `we have ${dotaBoys.length} DotaBois and gurls`;
+        //message.channel.send(currentList);
+
         message.channel.send(`React to this message with 🏠 to get a spot in the next Whiskey Inhouse`)
         
         this.client.on('messageReactionAdd', (reaction, user) => {
@@ -82,15 +86,10 @@ module.exports = class InhouseCommand extends Command {
                 console.log(`DotaBoysNameArray ${dotaBoysNameArray}`)
 
                 //message to update
-                message.channel.send({embed: {
-                    color: 3447003,
-                    description:`we have ${dotaBoys.length} DotaBois and gurls`
-                  }})
-                .then(msg => {
-                  msg.delete(5000)
-                })
-                .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
-              
+
+                this.client.user.lastMessage.edit(`we have ${dotaBoys.length} DotaBois and gurls`);
+                
+
                 message.channel.send({embed: {
                     title: 'Current inhousers',
                     color: 3447003,
@@ -131,14 +130,19 @@ module.exports = class InhouseCommand extends Command {
         });
         this.client.on('messageReactionRemove', (reaction, user) => {
             if(reaction.emoji.name === "🏠") {
-                //the person who is in the inhouse queue    
+                //the person who is in the inhouse queue   
+                let dotaBoyName = user.username; 
                 let dotaBoi= reaction.message.guild.members.get(user.id)
                 //inhouse queue
                
-                //adds a dotaboi to the list
+                //takes a dotaboi from the list
                 dotaBoys.pop(dotaBoi);
+                dotaBoysNameArray.pop(dotaBoyName)
+
                 count--
-                message.channel.send(`we have ${dotaBoys.length} DotaBois and gurls`)
+                this.client.user.lastMessage.edit(`we have ${dotaBoys.length} DotaBois and gurls`);
+                
+                
 
                 console.log(`dotaBoys:${dotaBoys}`)
                 console.log(`dotaBoy:${dotaBoi}`)
