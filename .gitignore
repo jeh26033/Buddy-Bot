@@ -66,10 +66,15 @@ typings/
 responseData/library
 auth.json
 config.json
+<<<<<<< HEAD
 
 
 
 
 
+=======
+.sqlite-shm
+.sqlite-wal
+>>>>>>> super-prototype
 scores.sqlite-wal
 

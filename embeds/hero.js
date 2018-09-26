@@ -1,4 +1,4 @@
-module.exports = (client, hero) => {
+module.exports = (client, hero, message) => {
     let attrs = {
         str: `${hero.base_str} + ${Number(hero.str_gain)}`,
         agi: `${hero.base_agi} + ${Number(hero.agi_gain)}`,
@@ -25,14 +25,18 @@ module.exports = (client, hero) => {
         `In Captains mode: ${hero.cm_enabled ? "Yes" : "No"}`,
         `Legs: ${hero.legs}`
     ];
-
+    console.log(val3);
+    console.log(hero.icon)
     attrs[hero.primary_attr] = `__${attrs[hero.primary_attr]}__`;
 
-    return {
+    message.say({embed: { 
+        color: 3447003,
         "author": {
             "name": hero.localized_name,
             "url": `http://dota2.gamepedia.com/${hero.url}`,
+
             "icon_url": `http://cdn.dota2.com${hero.icon}`
+
         },
         "fields": [{
             "name": `${attrs.str} <:strength:281578819721363457>`,
@@ -48,8 +52,10 @@ module.exports = (client, hero) => {
             "inline": true
         }, {
             "name": "Abilities",
-            "value": hero.abilities.join(", "),
-            "inline": false
+            "value": hero.abilities.join(" | "),
+            "inline": true
         }]
-    };
-};
+    }
+   })
+
+}

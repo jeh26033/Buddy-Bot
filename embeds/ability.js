@@ -5,7 +5,7 @@ function wikitize(string) {
 function embed(ability) {
     return {
         "author": {
-            "name": ability.dname,
+            "name": abilityName,
             "url": `http://dota2.gamepedia.com/${wikitize(ability.hero.local)}#${wikitize(ability.dname)}`,
             "icon_url": `http://cdn.dota2.com${ability.img}`
         },
