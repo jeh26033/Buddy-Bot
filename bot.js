@@ -93,8 +93,9 @@ client
 const activities_list = [
     "Spamming Tinker",
     "listening to Flyleaf", 
+    "listening to Mudvayne", 
     "I'm watching you Fushi.",
-    "Human Domination Simulator",
+    "Human Domination Sim",
     "The Brave Little Toaster",
     "listening to Godsmack"
     ]; // creates an arraylist containing phrases you want your bot to switch through.
@@ -541,11 +542,12 @@ client.on('message', message => {
 });
 
 // Turn bot off (destroy), then turn it back on
-function resetBot(channel) {
+async function resetBot(channel) {
     // send channel a message that you're resetting bot [optional]
     channel.send('Resetting...')
-    .then(msg => client.destroy())
-    .then(() => client.login(config.token));
+    await channel.send("Rebooting...").catch(err => this.client.console.error(err));
+    process.exit(1);
+    client.login(config.token);
     channel.send('I\'m back');
     console.log('look at me')
 }
