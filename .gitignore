@@ -70,3 +70,4 @@ config.json
 .sqlite-wal
 scores.sqlite-wal
 scores.sqlite-shm
+*.sqlite-shm
