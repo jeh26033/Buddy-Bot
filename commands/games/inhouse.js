@@ -14,6 +14,13 @@ module.exports = class InhouseCommand extends Command {
             memberName: 'inhouse',
             description: 'Lets people join a queue for inhouses, then pings when enough people have joined',
             examples: ['Inhouse'],
+            args: [{
+                key: 'ping',
+                label: 'pingrole',
+                prompt: 'Do you want to ping the dota role, yes or no?',
+                type: 'string',
+                infinite: false
+              }]
 
         });
 
@@ -22,7 +29,7 @@ module.exports = class InhouseCommand extends Command {
     if (!this.client.isOwner(msg.author)) return 'Only the bot owner(s) may use this command.';    
     return this.client.isOwner(msg.author);
 }
-    async run(message) {
+    async run(message, args) {
 
         //gets the dota role for the specific server
         let dotaRole = message.guild.roles.find('name','Dota 2');
@@ -41,16 +48,20 @@ module.exports = class InhouseCommand extends Command {
         
 
         //the pingy part.
-        /*
-        for (var i = potentialDotaBoisArray.length - 1; i >= 0; i--) {
-            message.channel.send("<@!" + potentialDotaBoisArray[i] + ">");
-        }*/
+        console.log(args.ping)
+        if (args.ping==='yes') {
+            for (var i = potentialDotaBoisArray.length - 1; i >= 0; i--) {
+                message.channel.send("<@!" + potentialDotaBoisArray[i] + ">");
+            }
+        }
 
         //the embed for list of people with the role
+        /*
         const ListEmbed = new Discord.RichEmbed()
             .setTitle(`Users with dota 2 role`)
             .setDescription(potentialDotaBoisName)
         message.channel.send(ListEmbed);
+        */
 
         //the starting count
         let count = 0;
@@ -62,10 +73,21 @@ module.exports = class InhouseCommand extends Command {
         let dotaBoysNameArray=[]
 
         //current list message
+
         let currentList= `we have ${dotaBoys.length} DotaBois and gurls`;
         //message.channel.send(currentList);
+        const reactEmbed = new Discord.RichEmbed()
+            .setColor('0x8a2be2')
+            .setTitle(`React to this message with 🏠 to get a spot in the next Whiskey Inhouse`)
+            .setDescription(`Users will be alerted when a full house is achieved. This lasts for 1 hour.`)
 
-        message.channel.send(`React to this message with 🏠 to get a spot in the next Whiskey Inhouse`)
+        message.channel.send(reactEmbed)
+        .then(msg => {
+            msg.delete(3600000)
+            
+            })
+            .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
+
         
         this.client.on('messageReactionAdd', (reaction, user) => {
 
@@ -87,19 +109,12 @@ module.exports = class InhouseCommand extends Command {
 
                 //message to update
 
-                this.client.user.lastMessage.edit(`we have ${dotaBoys.length} DotaBois and gurls`);
-                
-
-                message.channel.send({embed: {
-                    title: 'Current inhousers',
-                    color: 3447003,
-                    description: dotaBoysNameArray.join(' ,')
-                  }})
-                .then(msg => {
-                  msg.delete(5000)
-                })
-                .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
-                           
+                this.client.user.lastMessage.edit(
+                    {embed: {
+                      color: 3447003,
+                      description:`we have ${ dotaBoys.length} DotaBois and gurls\n${dotaBoysNameArray.join(' ,')}`
+                }})
+                    
                 //the debugs
                 console.log(`dotaBoys:${dotaBoys}`)
                 console.log(`dotaBoi:${dotaBoi}`)
@@ -109,7 +124,7 @@ module.exports = class InhouseCommand extends Command {
                 console.log(count);
                 
                 //the check to see if we have enough
-                if (count === 2) {
+                if (count === 10) {
 
                     //reset count
                     count=0
@@ -140,7 +155,12 @@ module.exports = class InhouseCommand extends Command {
                 dotaBoysNameArray.pop(dotaBoyName)
 
                 count--
-                this.client.user.lastMessage.edit(`we have ${dotaBoys.length} DotaBois and gurls`);
+                this.client.user.lastMessage.edit(
+                    {embed: {
+                              color: 3447003,
+                              description:`we have ${dotaBoys.length} DotaBois and gurls\n${ dotaBoysNameArray.join(' ,')}`
+                    }})
+               // this.client.user.lastMessage.edit(`we have ${dotaBoys.length} DotaBois and gurls`);
                 
                 
 

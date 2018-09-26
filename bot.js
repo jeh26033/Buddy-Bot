@@ -34,7 +34,6 @@ const Enmap = require("enmap");
 const EnmapLevel = require('enmap-level');
 const { RichEmbed } = require('discord.js');
 
-
 //heroku ports and such.
 const host = '0.0.0.0';
 const port = process.env.PORT || 3000;
@@ -69,6 +68,7 @@ console.log('Awaiting log in.');
 
 //reaction for starboard
 var reaction = '⭐';
+
 //error message managment 
 client
     .on('error', e => console.error(error(e)))
@@ -89,14 +89,14 @@ client
             blocked; ${reason}
         `);
     })
+
 const activities_list = [
-    "Spamming Techies", 
     "Spamming Tinker",
-    "Last Hitting Practice", 
-    "Hi Forge",
+    "listening to Flyleaf", 
     "I'm watching you Fushi.",
     "Human Domination Simulator",
-    "The Brave Little Toaster"
+    "The Brave Little Toaster",
+    "listening to Godsmack"
     ]; // creates an arraylist containing phrases you want your bot to switch through.
 
 client.on('ready', () => {
@@ -105,6 +105,8 @@ client.on('ready', () => {
         client.user.setActivity(activities_list[index]); // sets bot's activities to one of the phrases in the arraylist.
     }, 10000); // Runs this every 10 seconds.
 });
+
+//logging
 client.on("ready", () => {
   console.log(chalk.magenta(`Logged in as ${client.user.tag}!`));
   //client.user.setActivity("with my food!");
@@ -505,11 +507,45 @@ process.on('unhandledRejection', err => {
 
 client.login(config.token);
 
-function resetBot(channel) {
+function resetBot(channel, msg) {
 // send channel a message that you're resetting bot [optional]
-    msg.channel.send('Resetting...')
-    .then(msg => this.client.destroy())
-    .then(() => this.client.login(config.token));
+    console.log('Resetting...')
+    .then(msg => client.destroy())
+    .then(() => client.login(config.token));
 }
-//wild dota stuff below
+//dumb admin commands
 
+client.on('message',message=>{
+  const adminPrefix=['?','%','/'];
+  let prefix = false;
+  for(const thisPrefix of adminPrefix) {
+    if(message.content.startsWith(thisPrefix)) prefix = thisPrefix;
+  }
+  if(!prefix) return;
+
+  if(message.content.startsWith(prefix+'restart')){
+    resetBot(message.channel);
+  }
+
+})
+
+// set message listener 
+client.on('message', message => {
+    switch(message.content.toUpperCase()) {
+        case '?RESET':
+            resetBot(message.channel);
+            break;
+
+        // ... other commands
+    }
+});
+
+// Turn bot off (destroy), then turn it back on
+function resetBot(channel) {
+    // send channel a message that you're resetting bot [optional]
+    channel.send('Resetting...')
+    .then(msg => client.destroy())
+    .then(() => client.login(config.token));
+    channel.send('I\'m back');
+    console.log('look at me')
+}

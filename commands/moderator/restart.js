@@ -19,8 +19,6 @@ module.exports = class RestartCommand extends Command {
     return this.client.isOwner(msg.author);
 }
     run(msg) {
-        
-
         resetBot();
         msg.channel.send('I\'m Back');
 
