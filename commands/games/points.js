@@ -1,8 +1,7 @@
 const { Command } = require('discord.js-commando');
-//const sql = require("sqlite");
-//sql.open("./score.sqlite"); 
 const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
+const { oneLine } = require('common-tags');
 module.exports = class PointsCommand extends Command {
     constructor(client) {
         super(client, {
@@ -28,14 +27,19 @@ module.exports = class PointsCommand extends Command {
       let score = this.client.getScore.get(message.author.id, message.guild.id);
 
     // If the score doesn't exist (new user), initialize with defaults. 
-    if (!score) {
-      score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
-    }
-      return message.reply({embed: {
+    if (!score.dotaid) {
+       message.reply({embed: {
             color: 3447003,
-            description: `:sparkles: You Currently Have **${score.points}** Buddybucks and are Level **${score.level}** :sparkles: `
+            description: `:sparkles: You Currently Have **${score.points}** Buddybucks and are Level **${score.level}**. :sparkles: `,
+            value: `Run the dota command to input your dota 2 ID and unlock other dota-related commands!`
           }});
-          
+
+          }else{
+            message.reply({embed: {
+            color: 3447003,
+            description: oneLine`:sparkles: You Currently Have **${score.points}** Buddybucks, are Level **${score.level}**, your Dota Id is **${score.dotaid}** :sparkles: `
+          }});
+          }
      
           
  

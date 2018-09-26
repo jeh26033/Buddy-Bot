@@ -28,20 +28,39 @@ module.exports = class StoreCommand extends Command {
 			description: `Your current level is **${score.level}**, you have **${score.points}** buddybucks`,
 			title:"World Famous buddybuck Store!",
 			fields: [{
-				
+						        
+				name: "bird",
+				description:"A lovely Bird Gif",
+		        value: "10 Buddybucks"
+		      },	
+		      {	        
+		        name: "dog",
+		        description:"Sends a wholesome gif of a dog",
+		        value: "10 Buddybucks"
+		      },
+		      {		      
+		        name: "owl",
+		        description:"posts a magnificent owl Gif",
+		        value: "10 Buddybucks"
+		      },
+		      {
 		        name: "kill",
+		        description:"A murder most fowl",
 		        value: "100 Buddybucks"
 		      },
 		      {
 		        name: "Hug",
+		        description:"A good way to make up for wrongful deaths",
 		        value: "120 Buddybucks"
 		      },
 		      {
 		      	name:"covertkill",
+		      	description:"a sneaky assassination!",
 		      	value:"200 BuddyBucks"
 		      },
 		      {
 		        name: "Sensual Story",
+		        description:"holy shit you don't want to know",
 		        value: "100,000 Buddybucks"
 		      }
 		    ]

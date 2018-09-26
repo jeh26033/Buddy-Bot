@@ -1,6 +1,6 @@
 const { Command } = require('discord.js-commando');
 const https = require('https');
-
+const randomPuppy = require('random-puppy');
 module.exports = class MemeCommand extends Command {
     constructor(client) {
         super(client, {
@@ -15,7 +15,7 @@ module.exports = class MemeCommand extends Command {
 
     run(msg) {
         console.log('memeing you up, boss');
-        let toMeme = `
+        /*let toMeme = `
             https://i.redd.it/0ilh488xbudz.png
             https://cdn.discordapp.com/attachments/310611569794875404/353539349742092289/image.jpg
             https://scontent-atl3-1.cdninstagram.com/vp/dc20e9c175a1916005102ee0ff3b80d3/5C183F30/t51.2885-15/e35/39215286_253618398692475_1145614420911587328_n.jpg
@@ -140,9 +140,15 @@ module.exports = class MemeCommand extends Command {
         let memeList = toMeme.split('\n');
         
         memeList = memeList[Math.floor(Math.random() * memeList.length)];
-        msg.say(memeList);
+        msg.say(memeList);*/
 
-        //sends report to bot-log channel
+      randomPuppy('dankmemes')
+          .then(url => {
+              console.log(url);
+           
+              msg.say(url)
+          })
+ 
        
 
   };
