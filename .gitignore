@@ -67,6 +67,10 @@ responseData/library
 auth.json
 config.json
 scores.sqlite-shm
+scores.sqlite
+score.sqlite
+scores.sqlite-shm
+scores.sqlite-wal
 <<<<<<< HEAD
 
 
