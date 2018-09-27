@@ -72,3 +72,5 @@ scores.sqlite-wal
 scores.sqlite-shm
 *.sqlite-shm
 scores.sqlite-shm
+scores.sqlite-shm
+scores.sqlite-wal

@@ -46,7 +46,8 @@ const client = new commando.Client({
         '93420059858305024', //Arbiter
         '198885740376096768' //Forge
     ],
-    disableEveryone: true
+    disableEveryone: true,
+    unknownCommandResponse: false
 });
 
 client.registry
@@ -82,6 +83,9 @@ client
     .on('commandError', (cmd, err) => {
         if (err instanceof commando.FriendlyError) return;
         console.error(`Error in command ${cmd.groupID}:${cmd.memberName}`, err);
+    })
+    .on('unknownCommand',(msg, reason)=>{
+      msg.channel.send('I don\'t understand what you want.')
     })
     .on('commandBlocked', (msg, reason) => {
         console.log(oneLine `
