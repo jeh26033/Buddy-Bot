@@ -67,9 +67,12 @@ scores.sqlite
 scores.sqlite-shm
 scores.sqlite-wal
 <<<<<<< HEAD
+<<<<<<< HEAD
 ppm2
 <<<<<<< HEAD
 
+=======
+>>>>>>> 2ddf8da7931d4aee9bcb6bdfca310520efb79e96
 =======
 >>>>>>> 2ddf8da7931d4aee9bcb6bdfca310520efb79e96
 
@@ -81,9 +84,13 @@ config.json
 *.sqlite-wal
 scores.sqlite-wal
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 *.sqlite-wal
 scores.sqlite-wal
+=======
+*.sqlite
+>>>>>>> 2ddf8da7931d4aee9bcb6bdfca310520efb79e96
 =======
 *.sqlite
 >>>>>>> 2ddf8da7931d4aee9bcb6bdfca310520efb79e96
