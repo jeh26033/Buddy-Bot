@@ -78,6 +78,7 @@ ppm2
 
 auth.json
 config.json
+<<<<<<< HEAD
 *.sqlite-shm
 *.sqlite-wal
 *.sqlite-shm
@@ -94,3 +95,9 @@ scores.sqlite-wal
 =======
 *.sqlite
 >>>>>>> 2ddf8da7931d4aee9bcb6bdfca310520efb79e96
+=======
+
+scores.sqlite-wal
+scores.sqlite-shm
+
+>>>>>>> super-prototype
