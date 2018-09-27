@@ -66,11 +66,7 @@ typings/
 responseData/library
 auth.json
 config.json
-.sqlite-shm
-.sqlite-wal
+
 scores.sqlite-wal
 scores.sqlite-shm
-*.sqlite-shm
-scores.sqlite-shm
-scores.sqlite-shm
-scores.sqlite-wal
+
