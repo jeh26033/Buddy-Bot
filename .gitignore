@@ -59,28 +59,31 @@ typings/
 
 # next.js build output
 .next
-.sqlite
-.sqlite-shm
-.sqlite-wal
+
 #bot token
-responseData/library
-auth.json
-config.json
-scores.sqlite-shm
+
+
 scores.sqlite
-score.sqlite
 scores.sqlite-shm
 scores.sqlite-wal
 <<<<<<< HEAD
-
-
-
-
+ppm2
+<<<<<<< HEAD
 
 =======
-.sqlite
-.sqlite-shm
-.sqlite-wal
->>>>>>> super-prototype
-scores.sqlite-wal
+>>>>>>> 2ddf8da7931d4aee9bcb6bdfca310520efb79e96
 
+auth.json
+config.json
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-wal
+scores.sqlite-wal
+<<<<<<< HEAD
+
+*.sqlite-wal
+scores.sqlite-wal
+=======
+*.sqlite
+>>>>>>> 2ddf8da7931d4aee9bcb6bdfca310520efb79e96

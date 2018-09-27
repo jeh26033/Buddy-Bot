@@ -40,7 +40,7 @@ const port = process.env.PORT || 3000;
 const commandprefix ='!';
 // client set up and settings
 const client = new commando.Client({
-    commandPrefix: '!',
+    commandPrefix: 'buddy, ',
     owner: [
         '162215263335350272', //joe
         '93420059858305024', //Arbiter
