@@ -13,6 +13,8 @@
     11. remove DMing from getting starred. 
     12. make more messages remove themselves, including leaderboards.
  */
+
+var Snooper = require('reddit-snooper')
 const morse = require('morse-node').create('ITU');
 const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
@@ -509,49 +511,85 @@ process.on('unhandledRejection', err => {
   console.error(`"error": \n${err.stack}`);
 });
 
-
 client.login(config.token);
 
-function resetBot(channel, msg) {
-// send channel a message that you're resetting bot [optional]
-    console.log('Resetting...')
-    .then(msg => client.destroy())
-    .then(() => client.login(config.token));
-}
-//dumb admin commands
+var feedparser = new FeedParser();
+var request = require('request')
+var feed = request('http://lorem-rss.herokuapp.com/feed?unit=second&interval=30')
+var req = request(feed, {timeout: 10000, pool: false});
+// attempt at RSS
 
-client.on('message',message=>{
-  const adminPrefix=['?','%','/'];
-  let prefix = false;
-  for(const thisPrefix of adminPrefix) {
-    if(message.content.startsWith(thisPrefix)) prefix = thisPrefix;
-  }
-  if(!prefix) return;
+function fetch(feed) {
 
-  if(message.content.startsWith(prefix+'restart')){
-    resetBot(message.channel);
-  }
+  // Define our streams
+  
+  req.setMaxListeners(50);
+  // Some feeds do not respond without user-agent and accept headers.
+  req.setHeader('accept', 'text/html,application/xhtml+xml');
 
-})
+  // Define our handlers
+  req.on('error', done);
+  req.on('response', function(res) {
+    if (res.statusCode != 200) return this.emit('error', new Error('Bad status code'));
 
-// set message listener 
-client.on('message', message => {
-    switch(message.content.toUpperCase()) {
-        case '?RESET':
-            resetBot(message.channel);
-            break;
+    // And boom goes the dynamite
+    res.pipe(feedparser);
+  });
 
-        // ... other commands
+  feedparser.on('error', done);
+  feedparser.on('end', done);
+  feedparser.on('readable', function() {
+    var post;
+    while (post = this.read()) {
+      console.log(JSON.stringify(post, ' ', 4));
     }
+  });
+}
+
+
+req.on('error', function (error) {
+  // handle any request errors
+});
+ 
+req.on('response', function (res) {
+  var stream = this; // `this` is `req`, which is a stream
+
+ 
+  if (res.statusCode !== 200) {
+    this.emit('error', new Error('Bad status code'));
+  }
+  else {
+    stream.pipe(feedparser);
+  
+  }
 });
 
-// Turn bot off (destroy), then turn it back on
-async function resetBot(channel) {
-    // send channel a message that you're resetting bot [optional]
-    channel.send('Resetting...')
-    await channel.send("Rebooting...").catch(err => this.client.console.error(err));
-    process.exit(1);
-    client.login(config.token);
-    channel.send('I\'m back');
-    console.log('look at me')
-}
+  feedparser.on('meta', function (meta) {
+    console.log('===== %s =====', meta.title)
+ });
+
+
+feedparser.on('readable', function() {
+    var stream = this, item;
+    while (item = stream.read()) {
+      console.log('Got article: %s', item.title || item.description);
+    }
+  });
+feedparser.on('error', function (error) {
+  // always handle errors
+});
+ 
+feedparser.on('readable', function () {
+  // This is where the action is!
+  var stream = this; // `this` is `feedparser`, which is a stream
+  var meta = this.meta; // **NOTE** the "meta" is always available in the context of the feedparser instance
+  var item;
+
+
+  while (item = stream.read()) {
+
+    console.log(JSON.stringify(item, ' ', 1));
+
+
+  }
+});
