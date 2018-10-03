@@ -103,6 +103,7 @@ const activities_list = [
     "I'm watching you Fushi.",
     "Human Domination Sim",
     "The Brave Little Toaster",
+    "Looking for 7.20",
     "listening to Godsmack"
     ]; // creates an arraylist containing phrases you want your bot to switch through.
 
@@ -112,6 +113,7 @@ client.on('ready', () => {
         client.user.setActivity(activities_list[index]); // sets bot's activities to one of the phrases in the arraylist.
     }, 10000); // Runs this every 10 seconds.
 });
+   
 
 //logging
 client.on("ready", () => {
@@ -171,7 +173,7 @@ client.on("message", message => {
       // Level up!
       if(curLevel < 5){
         message.channel.send({embed: {
-          color: 3447003,
+          color: 0x8a2be2,
           description: `:sparkles: :up: You've leveled up to level **${curLevel}**! Still a wee baby! :up: :sparkles: `
           }})
         .then(msg => {
@@ -182,7 +184,7 @@ client.on("message", message => {
 
       if (curLevel >5 ) {
         message.channel.send({embed: {
-          color: 3447003,
+          color: 0x8a2be2,
           description: `:sparkles: :up: You've leveled up to level **${curLevel}**! You're growing up so fast!! :up: :sparkles: `
           }})
         .then(msg => {
@@ -193,7 +195,7 @@ client.on("message", message => {
        
       if (curLevel >10) {
         message.channel.send({embed: {
-          color: 3447003,
+          color: 0x8a2be2,
           description: `:sparkles: :up: You've leveled up to level **${curLevel}**! WOW, now you're just showing off :up: :sparkles: `
           }})
         .then(msg => {
@@ -228,7 +230,7 @@ client.on('commandRun', (command, promise, msg) => {
     if (msg.guild) {
        const botlog=client.channels.find('name','bot-logs');
         botlog.send({embed: {
-            color: 3447003,
+            color: 0x8a2be2,
             description: `
             **Command ran**
         Guild: ${msg.guild.name} (${msg.guild.id})
@@ -268,7 +270,7 @@ var karmicPower = 20;
     console.log(chalk.blue(`Found an ups!`));
     //checks if you're staring your own messages.
     if (message.author.id === user.id) return message.channel.send({embed: {
-          color: 3447003,
+          color: 0x8a2be2,
           description:`${user}, you cannot ups your own messages.`
           }})
         .then(msg => {
@@ -299,7 +301,7 @@ var karmicPower = 20;
     console.log(chalk.blue(`Found an downs`));
     //checks if you're staring your own messages.
     if (message.author.id === user.id) return message.channel.send({embed: {
-          color: 3447003,
+          color: 0x8a2be2,
           description:`${user}, you cannot down your own messages.`
           }})
         .then(msg => {
@@ -332,7 +334,7 @@ var karmicPower = 20;
         const message = reaction.message;
         //checks if you're staring your own messages.
         if (message.author.id === user.id) return message.channel.send({embed: {
-          color: 3447003,
+          color: 0x8a2be2,
           description:`${user}, you cannot star your own messages.`
           }})
         .then(msg => {
@@ -390,7 +392,7 @@ var karmicPower = 20;
       if (image === '' && message.cleanContent.length < 1) return message.channel.send(`${user}, you cannot star an empty message.`); 
 
       message.channel.send({embed: {
-            color: 3447003,
+            color: 0x8a2be2,
             description: `:sparkles: :star: A star has been born! :star: :sparkles: `
           }})
         .then(msg => {
@@ -513,83 +515,87 @@ process.on('unhandledRejection', err => {
 
 client.login(config.token);
 
-var feedparser = new FeedParser();
-var request = require('request')
-var feed = request('http://lorem-rss.herokuapp.com/feed?unit=second&interval=30')
-var req = request(feed, {timeout: 10000, pool: false});
-// attempt at RSS
 
-function fetch(feed) {
+//testing reddit patch alert system
+client.on('ready', () => {
+  const botlog= client.channels.find('name','bot-logs'); 
+  const patchLog = client.channels.find('name','patchnotes')
+  const artifact = client.channels.find('name', 'artifuckyeah')
+  botlog.send('started up')
 
-  // Define our streams
-  
-  req.setMaxListeners(50);
-  // Some feeds do not respond without user-agent and accept headers.
-  req.setHeader('accept', 'text/html,application/xhtml+xml');
+  snooper = new Snooper(
+    {
+        // credential information is not needed for snooper.watcher
+        username: 'reddit_username',
+        password: 'reddit password',
+        app_id: 'reddit api app id',
+        api_secret: 'reddit api secret',
+        user_agent: 'OPTIONAL user agent for your bot',
 
-  // Define our handlers
-  req.on('error', done);
-  req.on('response', function(res) {
-    if (res.statusCode != 200) return this.emit('error', new Error('Bad status code'));
+        automatic_retries: true, // automatically handles condition when reddit says 'you are doing this too much'
+        api_requests_per_minute: 60 // api requests will be spread out in order to play nicely with Reddit
+    });
 
-    // And boom goes the dynamite
-    res.pipe(feedparser);
-  });
+  //dota watcher
+  snooper.watcher.getPostWatcher('dota2') 
+    .on('post', function(post) {
+        console.log('post title:' + post.data.title)
+        console.log('post was posted by: ' + post.data.author)
+        const postEmbed = new Discord.RichEmbed()
+          
+          .setURL(` ${post.data.url}`)
+          .setTitle(`**${post.data.title}**`)
+          .setAuthor(`${post.data.author}`)
+          .addBlankField(true)
+          .setColor('0x8a2be2')
+          .setThumbnail(`https://pbs.twimg.com/profile_images/807755806837850112/WSFVeFeQ_400x400.jpg`)
+          .setDescription(`<:icefrog:497144682237657088> A new patch has been (probably) been released! Go check it out! `)
+    
+          .setTimestamp()
+        botlog.send(postEmbed)
 
-  feedparser.on('error', done);
-  feedparser.on('end', done);
-  feedparser.on('readable', function() {
-    var post;
-    while (post = this.read()) {
-      console.log(JSON.stringify(post, ' ', 4));
-    }
-  });
-}
+        console.log(chalk.red(post.data.author));
+        console.log(post.data.url)
+        console.log(post.data)
 
-
-req.on('error', function (error) {
-  // handle any request errors
-});
- 
-req.on('response', function (res) {
-  var stream = this; // `this` is `req`, which is a stream
-
- 
-  if (res.statusCode !== 200) {
-    this.emit('error', new Error('Bad status code'));
-  }
-  else {
-    stream.pipe(feedparser);
-  
-  }
-});
-
-  feedparser.on('meta', function (meta) {
-    console.log('===== %s =====', meta.title)
- });
+        if (post.data.author==='SirBelvedere' || post.data.author==='wykrhm' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
+          console.log(chalk.red('we got one!'));
+          patchLog.send(postEmbed);
+        }
 
 
-feedparser.on('readable', function() {
-    var stream = this, item;
-    while (item = stream.read()) {
-      console.log('Got article: %s', item.title || item.description);
-    }
-  });
-feedparser.on('error', function (error) {
-  // always handle errors
-});
- 
-feedparser.on('readable', function () {
-  // This is where the action is!
-  var stream = this; // `this` is `feedparser`, which is a stream
-  var meta = this.meta; // **NOTE** the "meta" is always available in the context of the feedparser instance
-  var item;
+    })
+
+    //artifact watcher
+    snooper.watcher.getPostWatcher('Artifact')
+    .on('post', function(post) {
+        console.log('post title:' + post.data.title)
+        console.log('post was posted by: ' + post.data.author)
+        const postEmbed = new Discord.RichEmbed()
+          
+          .setURL(` ${post.data.url}`)
+          .setTitle(`**${post.data.title}**`)
+          .setAuthor(`${post.data.author}`)
+          .addBlankField(true)
+          .setColor('0x8a2be2')
+          .setThumbnail(`http://mattdemers.com/wp-content/uploads/2017/08/valve_artifact_banner-945x500.png`)
+          .setDescription(`${post.data.selftext}`)
+          .addField(post.data.url)
+          .setTimestamp()
+          
+      
+        botlog.send(postEmbed)
+
+        console.log(chalk.red(post.data.author));
+        console.log(post.data.url)
+
+        //if o
+        if (post.data.author==='SirBelvedere' || post.data.author==='wykrhm' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
+          console.log(chalk.red('we got one!'));
+          artifact.send(postEmbed);
+        }
 
 
-  while (item = stream.read()) {
-
-    console.log(JSON.stringify(item, ' ', 1));
-
-
-  }
+    })
+    .on('error', console.error)
 });
