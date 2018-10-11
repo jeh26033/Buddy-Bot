@@ -143,8 +143,28 @@ client.on("ready", () => {
 });
 
 
-
-
+/* this is the code to put into reddit snooper watcher.
+try{
+                    if (!is_done) {
+                        this._get_items(
+                            start_page,
+                            children[children.length - 1].data.name,
+                            posts_needed ? posts_needed - children.length : posts_needed, // leave it null
+                            until_name,
+                            items,
+                            this.retries,
+                            cb_first_item,
+                            cb)
+                    } else {
+                        cb(null, items)
+                    }
+                } catch(e){
+                    console.log(e)
+                    cb('Requested too many items (reddit does not keep this large of a listing)', items)
+                } 
+                   
+                }
+                */
 function scoreChange(message, operation, amount){
   let score = client.getScore.get(message.author.id, message.guild.id);
   const botlog= client.channels.find('name','bot-logs');
