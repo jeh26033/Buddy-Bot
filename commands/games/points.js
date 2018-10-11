@@ -51,7 +51,7 @@ module.exports = class PointsCommand extends Command {
         if (!score.dotaid) {
            message.reply({embed: {
                 color: 0x8a2be2,
-                description: `:sparkles: You Currently Have **${score.points}** Buddybucks and are Level **${score.level}**. :sparkles: `,
+                description: `:sparkles: ${args.user} currently has **${score.points}** Buddybucks and are Level **${score.level}**. :sparkles: `,
                 value: `Run the dota command to input your dota 2 ID and unlock other dota-related commands!`
               }});
 

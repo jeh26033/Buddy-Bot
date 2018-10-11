@@ -17,7 +17,7 @@ module.exports = class BirdCommand extends Command {
     });
   }
 
-  async run(message, args, level, loadingMessage) { 
+  async run(message, args, level) { 
     const botlog=this.client.channels.find('name','bot-logs');
     let score = this.client.getScore.get(message.author.id, message.guild.id);
     if (!score) {

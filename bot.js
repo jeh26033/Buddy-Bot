@@ -14,6 +14,9 @@
     12. make more messages remove themselves, including leaderboards.
  */
 
+
+
+
 var Snooper = require('reddit-snooper')
 const morse = require('morse-node').create('ITU');
 const Discord = require('discord.js');
@@ -48,7 +51,8 @@ const client = new commando.Client({
         '93420059858305024', //Arbiter
         '198885740376096768' //Forge
     ],
-    disableEveryone: true,
+    disableEveryone: false,
+    disableHere:false,
     unknownCommandResponse: false
 });
 
@@ -72,6 +76,7 @@ console.log('Awaiting log in.');
 //reaction for starboard
 var reaction = '⭐';
 
+const watcher = require('./util/watcher.js');
 //error message managment 
 client
     .on('error', e => console.error(error(e)))
@@ -96,6 +101,8 @@ client
         `);
     })
 
+
+//activities list
 const activities_list = [
     "Spamming Tinker",
     "listening to Flyleaf", 
@@ -106,20 +113,20 @@ const activities_list = [
     "Looking for 7.20",
     "listening to Godsmack"
     ]; // creates an arraylist containing phrases you want your bot to switch through.
-
 client.on('ready', () => {
     setInterval(() => {
         const index = Math.floor(Math.random() * (activities_list.length - 1) + 1); // generates a random number between 1 and the length of the activities array list (in this case 5).
         client.user.setActivity(activities_list[index]); // sets bot's activities to one of the phrases in the arraylist.
     }, 10000); // Runs this every 10 seconds.
 });
-   
+
 
 //logging
 client.on("ready", () => {
   console.log(chalk.magenta(`Logged in as ${client.user.tag}!`));
-  //client.user.setActivity("with my food!");
   console.log(chalk.green('I am ready!'));
+
+
   // Check if the table "points" exists.
   const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
   if (!table['count(*)']) {
@@ -135,16 +142,36 @@ client.on("ready", () => {
   client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level, dotaid) VALUES (@id, @user, @guild, @points, @level, @dotaid);");
 });
 
+
+
+
+function scoreChange(message, operation, amount){
+  let score = client.getScore.get(message.author.id, message.guild.id);
+  const botlog= client.channels.find('name','bot-logs');
+  console.log(score);
+  console.log(amount);
+  console.log(operation);
+  var curLevel=score.level
+  console.log(curLevel)
+  var karmicPower = amount;   
+  const curPts = score.points;
+  console.log(score.karmicPower); 
+
+  if (operation=== '-') {
+    score.points -= karmicPower;
+    botlog.send(`${karmicPower} Buddybucks removed from ${message.author.tag}. You have a balance of ${score.points} buddybucks for ups`);
+    client.setScore.run(score)
+  }
+  if (operation=== '+') {
+    score.points += karmicPower;
+    botlog.send(`${karmicPower} Buddybucks added to ${message.author.tag}. You have a balance of ${score.points} buddybucks for ups`);
+    client.setScore.run(score)
+  }
+}
+
 //check to see if a person is in the table after every message is sent.
 client.on("message", message => {
-  const botwords = ["robot", "ultron", "robots", "bot "];
-  if(botwords.some(word => message.content.includes(word)) ) {
-    if (message.author.bot) return;
-      //message.split(/\b/).some(word => botwords.includes(word));
-     message.react("🤖")
-    // Or just do message.delete();
-  }
-  const botlog=client.channels.find('name','bot-logs');
+
   let score;
   if (message.guild) {
     // Try to get the current user's score. 
@@ -159,10 +186,9 @@ client.on("message", message => {
     if (message.author.bot){
       return
       }else{
+    // Increment points.
     score.points++;
   }
-    // Increment points.
-    
     // Calculate the current level through MATH OMG HALP.
     let curLevel = Math.floor(0.1 * Math.sqrt(score.points+1));
     
@@ -225,11 +251,13 @@ client.on('commandStatusChange', (guild, command, enabled) => {
             ${guild ? `in guild ${guild.name} (${guild.id})` : 'globally'}.
         `);
 })
+
 //sends command run to bot-log as well
 client.on('commandRun', (command, promise, msg) => {
     if (msg.guild) {
-       const botlog=client.channels.find('name','bot-logs');
-        botlog.send({embed: {
+      //wish i didn't need to declare this every time 
+      const botlog=client.channels.find('name','bot-logs');
+      botlog.send({embed: {
             color: 0x8a2be2,
             description: `
             **Command ran**
@@ -254,77 +282,56 @@ client.on('commandRun', (command, promise, msg) => {
         Command: ${command.groupID}:${command.memberName}
         Message: "${msg.content}"`);
     }
-})
+});
 
 //super cool Reactions!
 
 client.on('messageReactionAdd', async(reaction, user) => {
 
 let message = reaction.message;
+
 let score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
 var curLevel=score.level
-var karmicPower = 20;       
+var karmicPower = 20; 
+    
     //karma
-    const botlog= client.channels.find('name','bot-logs');
+    
     if (reaction.emoji.name === '⬆') {
-    console.log(chalk.blue(`Found an ups!`));
-    //checks if you're staring your own messages.
-    if (message.author.id === user.id) return message.channel.send({embed: {
-          color: 0x8a2be2,
-          description:`${user}, you cannot ups your own messages.`
-          }})
-        .then(msg => {
-          msg.delete(3000)
-        })
-        .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
-      
-    //checks if you're staring a bot message
-    if (message.author.bot) return
-          
+      console.log(chalk.blue(`ups!`));
+      /*if (message.author.id === user.id) return message.channel.send({embed: {
+        color: 0x8a2be2,
+        description:`${user}, knock it off.`
+        }})
+      .then(msg => {
+        msg.delete(3000)
+      })
+      .catch();*/
 
-    score = client.getScore.get(message.author.id, message.guild.id);
-        let curLevel=score.level
-       
-        // If the score doesn't exist (new user), initialize with defaults. 
-        if (!score) {
-       
-        }
-        const curPts = score.points;
-        console.log(score.karmicPower);
-        score.points += karmicPower;
-        botlog.send(`${karmicPower} Buddybucks added to ${message.author.tag}. You have a balance of ${score.points} buddybucks for ups`);
-        client.setScore.run(score)
-        
+
+   
+      scoreChange(message, '+', 20); 
+
     }//end of add karma
 
     if (reaction.emoji.name === '⬇') {
-    console.log(chalk.blue(`Found an downs`));
-    //checks if you're staring your own messages.
-    if (message.author.id === user.id) return message.channel.send({embed: {
-          color: 0x8a2be2,
-          description:`${user}, you cannot down your own messages.`
-          }})
-        .then(msg => {
-          msg.delete(3000)
-        })
-        .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
+
+      if (message.author.id === user.id) {
+        reaction.remove(user).then(reaction => {
+          console.log('Removed a reaction.');
+        });
       }
-      
+      if (message.author.id === user.id) return message.channel.send({embed: {
+        color: 0x8a2be2,
+        description:`${user}, knock it off.`
+      }})
+    .then(msg => {
+      msg.delete(3000)
 
-    //checks if you're staring a bot message
-    if (message.author.bot) return
-     
-     score = client.getScore.get(message.author.id, message.guild.id);
-
-          // If the score doesn't exist (new user), initialize with defaults. 
-          if (!score) {
-            score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
-          }
-          const curPts = score.points;
-          score.points -= karmicPower;
-          botlog.send(`${karmicPower} Buddybucks removed from ${message.author.tag}. You have a balance of ${score.points}`);
-          client.setScore.run(score)
-
+    })
+    .catch();
+      console.log(chalk.blue(`Found an downs`));
+      scoreChange(message, '-', 20); 
+    }
     //end of remove karma
     if (reaction.emoji.name === '⭐') {
         
@@ -335,18 +342,13 @@ var karmicPower = 20;
         //checks if you're staring your own messages.
         if (message.author.id === user.id) return message.channel.send({embed: {
           color: 0x8a2be2,
-          description:`${user}, you cannot star your own messages.`
+          description:`${user}, really? don't do that.`
           }})
         .then(msg => {
           msg.delete(3000)
         })
-        .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
-        //checks if you're staring a bot message
-       // if (message.author.bot) return message.channel.send(`${user}, you cannot star bot messages.`);
+        .catch(e);
         const starChannel = message.guild.channels.find('name','star-channel');
-
-        // If there's no starboard channel, we stop the event from running any further, and tell them that they don't have a starboard channel.
-        if (!starChannel) return message.channel.send(`It appears that you do not have a \`${starboard}\` channel.`); 
 
         console.log('searching if a message like this is already there');
         const fetch = await starChannel.fetchMessages({ limit: 100 }); 
@@ -354,6 +356,7 @@ var karmicPower = 20;
         
 
       if (stars) {
+
           // Regex to check how many stars the embed has.
           const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.embeds[0].footer.text);
 
@@ -362,13 +365,9 @@ var karmicPower = 20;
 
           // We use the this.extension function to see if there is anything attached to the message.
           const image =  message.attachments.size > 0 ? message.attachments.array()[0].url : ''; 
-          const curPts = score.points;
-          if (!score) {
-            score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
-          }
-        score.points += 100;
-        botlog.send(`100 Buddybucks added to ${message.author.tag}. You have a balance of ${score.points} buddybucks for a star!`);
-        this.client.setScore.run(score);
+          
+          scoreChange(message, '+', 100);
+
           
           const embed = new RichEmbed()
               .setColor(foundStar.color)
@@ -391,27 +390,11 @@ var karmicPower = 20;
       // If the message is empty, we don't allow the user to star the message.
       if (image === '' && message.cleanContent.length < 1) return message.channel.send(`${user}, you cannot star an empty message.`); 
 
-      message.channel.send({embed: {
-            color: 0x8a2be2,
-            description: `:sparkles: :star: A star has been born! :star: :sparkles: `
-          }})
-        .then(msg => {
-          msg.delete(10000)
-        })
-        .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
       //star alert!
       message.author.send('you had a post starred!');
-
+      scoreChange(message, '+', 100);
       // gives user 100 buddybucks
-      score = client.getScore.get(message.author.id, message.guild.id);
 
-      // If the score doesn't exist (new user), initialize with defaults. 
-      if (!score) {
-        score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
-      }
-      score.points += 100;
-      botlog.send(`100 Buddybucks added to ${message.author.tag}. You have a balance of ${score.points} buddybucks for a star!`);
-      this.client.setScore.run(score);
       const embed = new RichEmbed()
         // We set the color to a nice yellow here.
         .setColor(15844367)
@@ -430,40 +413,16 @@ var karmicPower = 20;
 client.on('messageReactionRemove', async(reaction, user) => {
     let score;
     let message = reaction.message;
-    //karma
-    const botlog= client.channels.find('name','bot-logs');
 
-    score = client.getScore.get(message.author.id, message.guild.id);
-      // If the score doesn't exist (new user), initialize with defaults. 
-      if (!score) {
-        score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1,dotaid:null };
-      }
-      const curPts = score.points;
-      console.log(score.points);
-      score.points -= 20;
-      client.setScore.run(score)
-        
-    //end of add karma
+    if (reaction.emoji.name === '⬆') {
+      console.log(chalk.blue(`removed an ups`));
+      scoreChange(message, '-', 20)
+    }
 
     if (reaction.emoji.name === '⬇') {
-    console.log(chalk.blue(`Found an downs`));
-    //checks if you're karma'ing your own messages.
-    if (message.author.id === user.id) return message.channel.send(`${user}, you cannot ⬇ your own messages.`);
-    //checks if you're karma'ing a bot message
-    if (message.author.bot) return message.channel.send(`${user}, you cannot ⬇ bot messages.`);
-     
-    score = client.getScore.get(message.author.id, message.guild.id);
-      // If the score doesn't exist (new user), initialize with defaults. 
-      if (!score) {
-        score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
-      }
-      const curPts = score.points;
-      console.log(score.points);
-
-      score.points += 20;
-      client.setScore.run(score)
-
-    }//end of remove karma
+      console.log(chalk.blue(`removed an downs`));
+      scoreChange(message, '+', 20)
+    }
 
     this.client = client;
     //if (message.author.id === user.id) return;
@@ -507,8 +466,6 @@ client.on('messageReactionRemove', async(reaction, user) => {
 function GuildName(guild) {
     return "Guild" + guild.replace(/[^a-zA-Z ]/g, "");
 }
-
-
 process.on('unhandledRejection', err => {
   console.error(`"error": \n${err.stack}`);
 });
@@ -517,12 +474,14 @@ client.login(config.token);
 
 
 //testing reddit patch alert system
+
+
 client.on('ready', () => {
+
   const botlog= client.channels.find('name','bot-logs'); 
   const patchLog = client.channels.find('name','patchnotes')
   const artifact = client.channels.find('name', 'artifuckyeah')
   botlog.send('started up')
-
   snooper = new Snooper(
     {
         // credential information is not needed for snooper.watcher
@@ -533,69 +492,132 @@ client.on('ready', () => {
         user_agent: 'OPTIONAL user agent for your bot',
 
         automatic_retries: true, // automatically handles condition when reddit says 'you are doing this too much'
-        api_requests_per_minute: 60 // api requests will be spread out in order to play nicely with Reddit
+        api_requests_per_minute: 30 // api requests will be spread out in order to play nicely with Reddit
     });
 
   //dota watcher
   snooper.watcher.getPostWatcher('dota2') 
+
     .on('post', function(post) {
+    try{
+        let selfText = post.data.selftext;
+        if (selfText.length > 2000) {
+          selfText= selfText.slice(0,2000).concat('...');
+        }
         console.log('post title:' + post.data.title)
-        console.log('post was posted by: ' + post.data.author)
+        console.log('post was posted by: ' + post.data.author) 
         const postEmbed = new Discord.RichEmbed()
-          
+
           .setURL(` ${post.data.url}`)
           .setTitle(`**${post.data.title}**`)
           .setAuthor(`${post.data.author}`)
           .addBlankField(true)
           .setColor('0x8a2be2')
           .setThumbnail(`https://pbs.twimg.com/profile_images/807755806837850112/WSFVeFeQ_400x400.jpg`)
-          .setDescription(`<:icefrog:497144682237657088> A new patch has been (probably) been released! Go check it out! `)
-    
+          .setDescription(`${selfText}`)
+          .setImage(`${post.data.url}`)
           .setTimestamp()
         botlog.send(postEmbed)
-
         console.log(chalk.red(post.data.author));
-        console.log(post.data.url)
-        console.log(post.data)
+        console.log(chalk.red(post.data.url));
+        //console.log(post.data)
 
         if (post.data.author==='SirBelvedere' || post.data.author==='wykrhm' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
           console.log(chalk.red('we got one!'));
           patchLog.send(postEmbed);
         }
 
+      }//try
+        catch (e) {
 
+      }//catch
+      process.on('unhandledRejection', err => {
+        console.error(`"error": \n${err.stack}`);
+      });
     })
 
     //artifact watcher
     snooper.watcher.getPostWatcher('Artifact')
+    
     .on('post', function(post) {
+    try{
+        let selfText = post.data.selftext;
+        if (selfText.length > 2000) {
+          selfText= selfText.slice(0,2000).concat('...');
+        }
         console.log('post title:' + post.data.title)
         console.log('post was posted by: ' + post.data.author)
+
         const postEmbed = new Discord.RichEmbed()
-          
           .setURL(` ${post.data.url}`)
           .setTitle(`**${post.data.title}**`)
           .setAuthor(`${post.data.author}`)
-          .addBlankField(true)
           .setColor('0x8a2be2')
           .setThumbnail(`http://mattdemers.com/wp-content/uploads/2017/08/valve_artifact_banner-945x500.png`)
-          .setDescription(`${post.data.selftext}`)
-          .addField(post.data.url)
+          .setDescription(`${selfText}`)
+          .setImage(`${post.data.url}`)
+          .addBlankField(true)
           .setTimestamp()
-          
-      
+        //sends to botlog
         botlog.send(postEmbed)
 
         console.log(chalk.red(post.data.author));
         console.log(post.data.url)
 
-        //if o
+        //if poster is special, it posts to the primary channel.
         if (post.data.author==='SirBelvedere' || post.data.author==='wykrhm' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
           console.log(chalk.red('we got one!'));
           artifact.send(postEmbed);
         }
-
+    }//try
+      catch(e){
+      }//catch
+      process.on('unhandledRejection', err => {
+        console.error(`"error": \n${err.stack}`);
+      });
 
     })
-    .on('error', console.error)
+
+//test watcher
+/*
+snooper.watcher.getPostWatcher('pics') 
+    .on('post', function(post) {
+    try{
+        console.log('pics post title:' + post.data.title)
+        console.log('pics post was posted by: ' + post.data.author)
+
+              
+        const postEmbed = new Discord.RichEmbed()
+
+          .setURL(` ${post.data.url}`)
+          .setTitle(`**${post.data.title}**`)
+          .setAuthor(`${post.data.author}`)
+          .addBlankField(true)
+          .setColor('0x8a2be2')
+          .setThumbnail(`https://pbs.twimg.com/profile_images/807755806837850112/WSFVeFeQ_400x400.jpg`)
+          .setDescription(`${post.data.selftext}`)
+          .setImage(`${post.data.url}`)
+          .setTimestamp()
+          
+        botlog.send(postEmbed)
+
+        console.log(chalk.red(post.data.author));
+        console.log(post.data.url)
+        //console.log(post.data)
+
+        if (post.data.author==='SirBelvedere' || post.data.author==='wykrhm' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
+          console.log(chalk.red('we got one!'));
+          patchLog.send(postEmbed);
+        }
+
+      }//try
+        catch(error){
+        console.error(error);
+      }//catch
+    })
+  */
+// on ready 
 });
+client.on('error', console.error);
+
+
