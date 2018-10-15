@@ -50,9 +50,10 @@ module.exports = class InhouseCommand extends Command {
         //the pingy part.
         console.log(args.ping)
         if (args.ping==='yes') {
-            for (var i = potentialDotaBoisArray.length - 1; i >= 0; i--) {
-                message.channel.send("<@!" + potentialDotaBoisArray[i] + ">");
-            }
+            /*for (var i = potentialDotaBoisArray.length - 1; i >= 0; i--) {
+                message.channel.send("<@!" + potentialDotaBoisArray[i] + ">");*/
+                message.say('@here');
+            
         }
 
         //the embed for list of people with the role

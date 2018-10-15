@@ -76,7 +76,8 @@ console.log('Awaiting log in.');
 //reaction for starboard
 var reaction = '⭐';
 
-const watcher = require('./util/watcher.js');
+//const watcher = require('./util/watcher.js');
+//const scoreChange  = require('./util/scoreChange.js');
 //error message managment 
 client
     .on('error', e => console.error(error(e)))
@@ -125,6 +126,7 @@ client.on('ready', () => {
 client.on("ready", () => {
   console.log(chalk.magenta(`Logged in as ${client.user.tag}!`));
   console.log(chalk.green('I am ready!'));
+  console.log(chalk.green('Database Ready'));
 
 
   // Check if the table "points" exists.
@@ -140,6 +142,7 @@ client.on("ready", () => {
     // And then we have two prepared statements to get and set the score data.
   client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
   client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level, dotaid) VALUES (@id, @user, @guild, @points, @level, @dotaid);");
+  console.log(client.getScore)
 });
 
 
@@ -486,9 +489,7 @@ client.on('messageReactionRemove', async(reaction, user) => {
 function GuildName(guild) {
     return "Guild" + guild.replace(/[^a-zA-Z ]/g, "");
 }
-process.on('unhandledRejection', err => {
-  console.error(`"error": \n${err.stack}`);
-});
+
 
 client.login(config.token);
 
@@ -638,6 +639,6 @@ snooper.watcher.getPostWatcher('pics')
   */
 // on ready 
 });
-client.on('error', console.error);
+
 
 
