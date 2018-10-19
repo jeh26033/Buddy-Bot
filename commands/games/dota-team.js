@@ -1,11 +1,11 @@
-import { Command } from 'discord.js-commando';
-import { DotaWikiApi } from 'dota-wiki-api';
+const {Command} = require('discord.js-commando');
+const { DotaWikiApi } = require('dota-wiki-api');
 
 const wikiApi = new DotaWikiApi({
     userAgentValue: 'BuddyBot__WSKB',
 });
 
-export default class HeroCommand extends Command {
+module.exports = class TeamCommand extends Command {
     constructor(client) {
         super(client, {
             name: 'team',
@@ -25,19 +25,25 @@ export default class HeroCommand extends Command {
     }
 
     async run(message, args) {
-        const alias = args.key;
+        console.log(args.team)
+        const alias = args.team;
 
         if (!alias) {
+            message.say('please provide a team')
             return console.log('no team provided')
+
         }
 
         try {
             const teamInfo = await wikiApi.getTeam(alias);
+            console.log(teamInfo)
+            console.log(team.name)
             message.say({
                 embed: {
                     color: 3447003,
                     "author": {
                         "name": team.name,
+
                         "url": `https://liquipedia.net/dota2/${teamInfo.name}`,
                     },
                     "fields": [
