@@ -76,7 +76,7 @@ console.log('Awaiting log in.');
 //reaction for starboard
 var reaction = '⭐';
 
-//const watcher = require('./util/watcher.js');
+const watcher = require('./util/watcher.js');
 //const scoreChange  = require('./util/scoreChange.js');
 //error message managment 
 client
@@ -502,6 +502,8 @@ client.on('ready', () => {
   const botlog= client.channels.find('name','bot-logs'); 
   const patchLog = client.channels.find('name','patchnotes')
   const artifact = client.channels.find('name', 'artifuckyeah')
+  const bottesting = client.channels.find('name', 'bot-testing')
+  const procircuit = client.channels.find('name', 'the-pro-circuit')
   botlog.send('started up')
   snooper = new Snooper(
     {
@@ -509,13 +511,54 @@ client.on('ready', () => {
         username: 'reddit_username',
         password: 'reddit password',
         app_id: 'reddit api app id',
-        api_secret: 'reddit api secret',
+        api_secret: config.reddit_secret,
         user_agent: 'OPTIONAL user agent for your bot',
 
         automatic_retries: true, // automatically handles condition when reddit says 'you are doing this too much'
         api_requests_per_minute: 30 // api requests will be spread out in order to play nicely with Reddit
     });
+  let options = {
+      listing: 'hot', // 'hot' OR 'rising' OR 'controversial' OR 'top_day' OR 'top_hour' OR 'top_month' OR 'top_year' OR 'top_all'
+      limit: 1 // how many posts you want to watch? if any of these spots get overtaken by a new post an event will be emitted, 50 is 2 pages
+  }
+  //dota hot watcher
+  snooper.watcher.getListingWatcher('dota2', options) 
+    .on('item', function(item) {
+        console.log("new item in HOT " + item)
+        try{
+        let selfText = item.data.selftext;
+        if (selfText.length > 2000) {
+          selfText= selfText.slice(0,2000).concat('...');
+        }
+        console.log('item title:' + item.data.title)
+        console.log('post was posted by: ' + item.data.author) 
+        const itemEmbed = new Discord.RichEmbed()
 
+          .setURL(` ${item.data.url}`)
+          .setTitle(`**${item.data.title}**`)
+          .setAuthor(`${item.data.author}`)
+          .addBlankField(true)
+          .setColor('0x8a2be2')
+          .setThumbnail(`https://pbs.twimg.com/profile_images/807755806837850112/WSFVeFeQ_400x400.jpg`)
+          .setDescription(`${selfText}`)
+          .setImage(`${item.data.url}`)
+          .setTimestamp()
+        bottesting.send(itemEmbed)
+        console.log(chalk.cyan(item.data.author));
+        console.log(chalk.cyan(item.data.url));
+        //console.log(post.data)
+
+
+
+      }//try
+        catch (e) {
+
+      }//catch
+      process.on('unhandledRejection', err => {
+        console.error(`"error": \n${err.stack}`);
+      });
+    })
+    .on('error', console.error)
   //dota watcher
   snooper.watcher.getPostWatcher('dota2') 
 
@@ -547,6 +590,10 @@ client.on('ready', () => {
           console.log(chalk.red('we got one!'));
           patchLog.send(postEmbed);
         }
+        if (post.data.author==='D2TournamentThreads') {
+          console.log(chalk.red('Spicy event deets!!'));
+          procircuit.send(postEmbed);
+        }
 
       }//try
         catch (e) {
@@ -564,7 +611,7 @@ client.on('ready', () => {
     try{
         let selfText = post.data.selftext;
         if (selfText.length > 2000) {
-          selfText= selfText.slice(0,2000).concat('...');
+          selfText= selfText.slice(0,1800).concat('...');
         }
         console.log('post title:' + post.data.title)
         console.log('post was posted by: ' + post.data.author)
@@ -599,45 +646,7 @@ client.on('ready', () => {
 
     })
 
-//test watcher
-/*
-snooper.watcher.getPostWatcher('pics') 
-    .on('post', function(post) {
-    try{
-        console.log('pics post title:' + post.data.title)
-        console.log('pics post was posted by: ' + post.data.author)
 
-              
-        const postEmbed = new Discord.RichEmbed()
-
-          .setURL(` ${post.data.url}`)
-          .setTitle(`**${post.data.title}**`)
-          .setAuthor(`${post.data.author}`)
-          .addBlankField(true)
-          .setColor('0x8a2be2')
-          .setThumbnail(`https://pbs.twimg.com/profile_images/807755806837850112/WSFVeFeQ_400x400.jpg`)
-          .setDescription(`${post.data.selftext}`)
-          .setImage(`${post.data.url}`)
-          .setTimestamp()
-          
-        botlog.send(postEmbed)
-
-        console.log(chalk.red(post.data.author));
-        console.log(post.data.url)
-        //console.log(post.data)
-
-        if (post.data.author==='SirBelvedere' || post.data.author==='wykrhm' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
-          console.log(chalk.red('we got one!'));
-          patchLog.send(postEmbed);
-        }
-
-      }//try
-        catch(error){
-        console.error(error);
-      }//catch
-    })
-  */
-// on ready 
 });
 
 
