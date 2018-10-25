@@ -77,7 +77,7 @@ console.log('Awaiting log in.');
 var reaction = '⭐';
 
 const watcher = require('./util/watcher.js');
-//const scoreChange  = require('./util/scoreChange.js');
+const scoreChange  = require('./util/scoreChange.js');
 //error message managment 
 client
     .on('error', e => console.error(error(e)))
@@ -142,7 +142,7 @@ client.on("ready", () => {
     // And then we have two prepared statements to get and set the score data.
   client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
   client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level, dotaid) VALUES (@id, @user, @guild, @points, @level, @dotaid);");
-  console.log(client.getScore)
+
 });
 
 
@@ -168,12 +168,9 @@ try{
                    
                 }
                 */
-function scoreChange(message, operation, amount){
+/*function scoreChange(message, operation, amount){
   let score = client.getScore.get(message.author.id, message.guild.id);
   const botlog= client.channels.find('name','bot-logs');
-  console.log(score);
-  console.log(amount);
-  console.log(operation);
   var curLevel=score.level
   console.log(curLevel)
   var karmicPower = amount;   
@@ -191,7 +188,7 @@ function scoreChange(message, operation, amount){
     client.setScore.run(score)
   }
 }
-
+*/
 //check to see if a person is in the table after every message is sent.
 client.on("message", message => {
 
@@ -308,15 +305,13 @@ client.on('commandRun', (command, promise, msg) => {
 });
 
 //super cool Reactions!
-
+const starredRecently = [];
 client.on('messageReactionAdd', async(reaction, user) => {
 
-let message = reaction.message;
-
-let score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
-var curLevel=score.level
-var karmicPower = 20; 
-    
+    let message = reaction.message;
+    let score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+    var curLevel=score.level
+    var karmicPower = 20; 
     //karma
     
     if (reaction.emoji.name === '⬆') {
@@ -329,15 +324,11 @@ var karmicPower = 20;
         msg.delete(3000)
       })
       .catch();*/
-
-
-   
       scoreChange(message, '+', 20); 
 
     }//end of add karma
 
     if (reaction.emoji.name === '⬇') {
-
       if (message.author.id === user.id) {
         reaction.remove(user).then(reaction => {
           console.log('Removed a reaction.');
@@ -356,8 +347,24 @@ var karmicPower = 20;
       scoreChange(message, '-', 20); 
     }
     //end of remove karma
+
     if (reaction.emoji.name === '⭐') {
-        
+      userid= user.id
+      //start of star cooldown
+      console.log(chalk.red(starredRecently))
+      if (starredRecently.includes(userid)) {
+          console.log('hit me')
+          return  message.channel.send({embed: {
+            color: 0x8a2be2,
+            description:`${user}, you got to chill.`
+            }})
+          .then(msg => {
+            console.log(chalk.cyan('removed'));
+            msg.delete(3000)
+          })
+          .catch(e);
+      } else {
+        console.log(chalk.cyan(starredRecently[0]));            
         this.client = client;
         console.log(chalk.yellow(`Found a Star!`));
         const guild = GuildName(reaction.message.guild.name);
@@ -368,9 +375,10 @@ var karmicPower = 20;
           description:`${user}, really? don't do that.`
           }})
         .then(msg => {
+          console.log(chalk.cyan('removed'));
           msg.delete(3000)
         })
-        .catch(e);
+        .catch(error);
         const starChannel = message.guild.channels.find('name','star-channel');
 
         console.log('searching if a message like this is already there');
@@ -427,8 +435,23 @@ var karmicPower = 20;
         .setFooter(`⭐ 1 | ${message.id}`)
         .setImage(image);
       await starChannel.send({ embed });
+      console.log(chalk.green('before push'))
+      console.log(chalk.red(starredRecently))
+      starredRecently.push(user.id);
+      console.log(chalk.green('after push'))
+      console.log(chalk.red(starredRecently))
+
+        setTimeout(() => {
+          // Removes the user from the set after a minute
+          console.log(chalk.green('before pop'))
+          starredRecently.pop();
+          console.log(chalk.red(starredRecently))
+          console.log(chalk.green('after pop'))
+          console.log(chalk.red(starredRecently))
+        }, 60000);
     }
   }
+}
 });
 
 //reaction removed
@@ -522,6 +545,7 @@ client.on('ready', () => {
       limit: 1 // how many posts you want to watch? if any of these spots get overtaken by a new post an event will be emitted, 50 is 2 pages
   }
   //dota hot watcher
+  /*
   snooper.watcher.getListingWatcher('dota2', options) 
     .on('item', function(item) {
         console.log("new item in HOT " + item)
@@ -558,7 +582,7 @@ client.on('ready', () => {
         console.error(`"error": \n${err.stack}`);
       });
     })
-    .on('error', console.error)
+    .on('error', console.error)*/
   //dota watcher
   snooper.watcher.getPostWatcher('dota2') 
 
@@ -586,9 +610,14 @@ client.on('ready', () => {
         console.log(chalk.red(post.data.url));
         //console.log(post.data)
 
-        if (post.data.author==='SirBelvedere' || post.data.author==='wykrhm' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
+        if (post.data.author==='SirBelvedere' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
           console.log(chalk.red('we got one!'));
           patchLog.send(postEmbed);
+        }
+        if (post.data.author==='wykrhm') {
+          console.log(chalk.red('we got one!'));
+          patchLog.send(postEmbed);
+          patchLog.send("@here")
         }
         if (post.data.author==='D2TournamentThreads') {
           console.log(chalk.red('Spicy event deets!!'));

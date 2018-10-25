@@ -5,16 +5,17 @@ const {Command} = require('discord.js-commando');
 const commando = require('discord.js-commando');
 const client = new Discord.Client();
 
-module.exports =
+
   function scoreChange(message, operation, amount){
+  client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
+  client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level, dotaid) VALUES (@id, @user, @guild, @points, @level, @dotaid);");
+
     try{
       console.log('hello from the scoreChange Module!')
       console.log(message.author.id)
+      let score =client.getScore.get(message.author.id, message.guild.id);
       console.log(client.getScore);
-      let score = client.getScore.get(message.author.id, message.guild.id);
       console.log(score)
-      const botlog= client.channels.find('name','bot-logs');
-      console.log(score);
       console.log(amount);
       console.log(operation);
       var curLevel=score.level
@@ -25,15 +26,16 @@ module.exports =
 
       if (operation=== '-') {
         score.points -= karmicPower;
-        botlog.send(`${karmicPower} Buddybucks removed from ${message.author.tag}. You have a balance of ${score.points} buddybucks for ups`);
+       
         client.setScore.run(score)
       }
       if (operation=== '+') {
         score.points += karmicPower;
-        botlog.send(`${karmicPower} Buddybucks added to ${message.author.tag}. You have a balance of ${score.points} buddybucks for ups`);
+        
         client.setScore.run(score)
       }
     } catch (e) {
       console.log(e);
     }
   }
+module.exports = scoreChange;
