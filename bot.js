@@ -168,30 +168,9 @@ try{
                    
                 }
                 */
-/*function scoreChange(message, operation, amount){
-  let score = client.getScore.get(message.author.id, message.guild.id);
-  const botlog= client.channels.find('name','bot-logs');
-  var curLevel=score.level
-  console.log(curLevel)
-  var karmicPower = amount;   
-  const curPts = score.points;
-  console.log(score.karmicPower); 
 
-  if (operation=== '-') {
-    score.points -= karmicPower;
-    botlog.send(`${karmicPower} Buddybucks removed from ${message.author.tag}. You have a balance of ${score.points} buddybucks for ups`);
-    client.setScore.run(score)
-  }
-  if (operation=== '+') {
-    score.points += karmicPower;
-    botlog.send(`${karmicPower} Buddybucks added to ${message.author.tag}. You have a balance of ${score.points} buddybucks for ups`);
-    client.setScore.run(score)
-  }
-}
-*/
-//check to see if a person is in the table after every message is sent.
+
 client.on("message", message => {
-
   let score;
   if (message.guild) {
     // Try to get the current user's score. 
@@ -211,8 +190,6 @@ client.on("message", message => {
   }
     // Calculate the current level through MATH OMG HALP.
     let curLevel = Math.floor(0.1 * Math.sqrt(score.points+1));
-    
-    
     // Check if the user has leveled up, and let them know if they have:
     if(score.level < curLevel) {
       score.level = curLevel;
@@ -227,7 +204,6 @@ client.on("message", message => {
         })
         .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
       }
-
       if (curLevel >5 ) {
         message.channel.send({embed: {
           color: 0x8a2be2,
@@ -238,7 +214,6 @@ client.on("message", message => {
         })
         .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
       }
-       
       if (curLevel >10) {
         message.channel.send({embed: {
           color: 0x8a2be2,
@@ -249,7 +224,6 @@ client.on("message", message => {
         })
         .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
       }
-
     }
     // Save data to the sqlite table. 
     client.setScore.run(score);
@@ -305,122 +279,111 @@ client.on('commandRun', (command, promise, msg) => {
 });
 
 //super cool Reactions!
+
+//used to determine cooldown of stars
 const starredRecently = [];
 client.on('messageReactionAdd', async(reaction, user) => {
+  let message = reaction.message;
+  let score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+  var curLevel=score.level
 
-    let message = reaction.message;
-    let score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
-    var curLevel=score.level
-    var karmicPower = 20; 
-    //karma
-    
-    if (reaction.emoji.name === '⬆') {
-      console.log(chalk.blue(`ups!`));
-      /*if (message.author.id === user.id) return message.channel.send({embed: {
-        color: 0x8a2be2,
-        description:`${user}, knock it off.`
-        }})
-      .then(msg => {
-        msg.delete(3000)
-      })
-      .catch();*/
-      scoreChange(message, '+', 20); 
-
-    }//end of add karma
-
-    if (reaction.emoji.name === '⬇') {
-      if (message.author.id === user.id) {
-        reaction.remove(user).then(reaction => {
-          console.log('Removed a reaction.');
-        });
-      }
-      if (message.author.id === user.id) return message.channel.send({embed: {
-        color: 0x8a2be2,
-        description:`${user}, knock it off.`
+  //karma
+  if (reaction.emoji.name === '⬆') {
+    console.log(chalk.blue(`ups!`));
+    /*if (message.author.id === user.id) return message.channel.send({embed: {
+      color: 0x8a2be2,
+      description:`${user}, knock it off.`
       }})
     .then(msg => {
       msg.delete(3000)
-
     })
-    .catch();
-      console.log(chalk.blue(`Found an downs`));
-      scoreChange(message, '-', 20); 
-    }
-    //end of remove karma
+    .catch();*/
+    scoreChange(message, '+',20); 
+  }
+  //end of add karma
 
-    if (reaction.emoji.name === '⭐') {
-      userid= user.id
-      //start of star cooldown
-      console.log(chalk.red(starredRecently))
-      if (starredRecently.includes(userid)) {
-          console.log('hit me')
-          return  message.channel.send({embed: {
-            color: 0x8a2be2,
-            description:`${user}, you got to chill.`
-            }})
-          .then(msg => {
-            console.log(chalk.cyan('removed'));
-            msg.delete(3000)
-          })
-          .catch(e);
-      } else {
-        console.log(chalk.cyan(starredRecently[0]));            
-        this.client = client;
-        console.log(chalk.yellow(`Found a Star!`));
-        const guild = GuildName(reaction.message.guild.name);
-        const message = reaction.message;
-        //checks if you're staring your own messages.
-        if (message.author.id === user.id) return message.channel.send({embed: {
+  //remove karma
+  if (reaction.emoji.name === '⬇') {
+    if (message.author.id === user.id) {
+      reaction.remove(user).then(reaction => {
+        console.log('Removed a reaction.');
+      });
+    }
+    if (message.author.id === user.id) return message.channel.send({embed: {
+      color: 0x8a2be2,
+      description:`${user}, knock it off.`
+    }})
+  .then(msg => {
+    msg.delete(3000)
+    })
+  .catch();
+    console.log(chalk.blue(`Found an downs`));
+    scoreChange(message, '-', 20); 
+  }
+  //end of remove karma
+  //STAR TIME
+  if (reaction.emoji.name === '⭐') {
+    userid= user.id
+    //start of star cooldown
+    console.log(chalk.red(starredRecently))
+    if (starredRecently.includes(userid)) {
+        console.log('hit me')
+        return  message.channel.send({embed: {
           color: 0x8a2be2,
-          description:`${user}, really? don't do that.`
+          description:`${user}, you got to chill.`
           }})
         .then(msg => {
           console.log(chalk.cyan('removed'));
           msg.delete(3000)
         })
-        .catch(error);
-        const starChannel = message.guild.channels.find('name','star-channel');
+        .catch(e);
+    }else{
+      console.log(chalk.cyan(starredRecently[0]));            
+      this.client = client;
+      console.log(chalk.yellow(`Found a Star!`));
+      const guild = GuildName(reaction.message.guild.name);
+      const message = reaction.message;
+      //checks if you're staring your own messages.
+      if (message.author.id === user.id) return message.channel.send({embed: {
+        color: 0x8a2be2,
+        description:`${user}, really? don't do that.`
+        }})
+      .then(msg => {
+        console.log(chalk.cyan('removed'));
+        msg.delete(3000)
+      })
+      .catch(error);
+      const starChannel = message.guild.channels.find('name','star-channel');
 
-        console.log('searching if a message like this is already there');
-        const fetch = await starChannel.fetchMessages({ limit: 100 }); 
-        const stars = fetch.find(m => m.embeds[0].footer.text.startsWith('⭐') && m.embeds[0].footer.text.endsWith(message.id)); 
-        
-
-      if (stars) {
-
-          // Regex to check how many stars the embed has.
-          const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.embeds[0].footer.text);
-
-          // A variable that allows us to use the color of the pre-existing embed.
-          const foundStar = stars.embeds[0];
-
-          // We use the this.extension function to see if there is anything attached to the message.
-          const image =  message.attachments.size > 0 ? message.attachments.array()[0].url : ''; 
-          
-          scoreChange(message, '+', 100);
-
-          
-          const embed = new RichEmbed()
-              .setColor(foundStar.color)
-              .setDescription(foundStar.description)
-              .setAuthor(message.author.tag, message.author.displayAvatarURL)
-              .setTimestamp()
-              .setFooter(`⭐ ${parseInt(star[1])+1} | ${message.id}`)
-              .setImage(image);
-              // We fetch the ID of the message already on the starboard.
-              const starMsg = await starChannel.fetchMessage(stars.id);
-              // And now we edit the message with the new embed!
-              await starMsg.edit({ embed }); 
+      console.log('searching if a message like this is already there');
+      const fetch = await starChannel.fetchMessages({ limit: 100 }); 
+      const stars = fetch.find(m => m.embeds[0].footer.text.startsWith('⭐') && m.embeds[0].footer.text.endsWith(message.id)); 
+    if(stars) {
+      // Regex to check how many stars the embed has.
+      const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.embeds[0].footer.text);
+      // A variable that allows us to use the color of the pre-existing embed.
+      const foundStar = stars.embeds[0];
+      // We use the this.extension function to see if there is anything attached to the message.
+      const image =  message.attachments.size > 0 ? message.attachments.array()[0].url : '';   
+      scoreChange(message, '+', 100);  
+      const embed = new RichEmbed()
+        .setColor(foundStar.color)
+        .setDescription(foundStar.description)
+        .setAuthor(message.author.tag, message.author.displayAvatarURL)
+        .setTimestamp()
+        .setFooter(`⭐ ${parseInt(star[1])+1} | ${message.id}`)
+        .setImage(image);
+        // We fetch the ID of the message already on the starboard.
+        const starMsg = await starChannel.fetchMessage(stars.id);
+        // And now we edit the message with the new embed!
+        await starMsg.edit({ embed }); 
       }
-
     // Now we use an if statement for if a message isn't found in the starboard for the message.
     if (!stars) {
-      
       console.log('A new Star message!');
       const image =  message.attachments.size > 0 ? message.attachments.array()[0].url : ''; 
       // If the message is empty, we don't allow the user to star the message.
       if (image === '' && message.cleanContent.length < 1) return message.channel.send(`${user}, you cannot star an empty message.`); 
-
       //star alert!
       message.author.send('you had a post starred!');
       scoreChange(message, '+', 100);
@@ -459,17 +422,14 @@ client.on('messageReactionAdd', async(reaction, user) => {
 client.on('messageReactionRemove', async(reaction, user) => {
     let score;
     let message = reaction.message;
-
     if (reaction.emoji.name === '⬆') {
       console.log(chalk.blue(`removed an ups`));
       scoreChange(message, '-', 20)
     }
-
     if (reaction.emoji.name === '⬇') {
       console.log(chalk.blue(`removed an downs`));
       scoreChange(message, '+', 20)
     }
-
     this.client = client;
     //if (message.author.id === user.id) return;
     //ignores if the reaction isn't a star
@@ -508,17 +468,12 @@ client.on('messageReactionRemove', async(reaction, user) => {
       console.log(chalk.red('removed a post'));
     }
 });
-
 function GuildName(guild) {
     return "Guild" + guild.replace(/[^a-zA-Z ]/g, "");
 }
-
-
 client.login(config.token);
 
-
 //testing reddit patch alert system
-
 
 client.on('ready', () => {
 
