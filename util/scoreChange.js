@@ -5,7 +5,6 @@ const {Command} = require('discord.js-commando');
 const commando = require('discord.js-commando');
 const client = new Discord.Client();
 
-
   function scoreChange(message, operation, amount){
   client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
   client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level, dotaid) VALUES (@id, @user, @guild, @points, @level, @dotaid);");

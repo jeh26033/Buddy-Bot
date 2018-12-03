@@ -17,8 +17,7 @@
 
 
 
-var Snooper = require('reddit-snooper')
-const morse = require('morse-node').create('ITU');
+var Snooper = require('reddit-snooper');
 const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
@@ -34,9 +33,7 @@ const warn = chalk.keyword('orange');
 const debug = chalk.cyan;
 const dbots = require('superagent');
 const config = require("./config.json");
-const moment = require('moment');
-const Enmap = require("enmap");
-const EnmapLevel = require('enmap-level');
+const settings = require("./settings.json");
 const { RichEmbed } = require('discord.js');
 
 //heroku ports and such.
@@ -75,7 +72,7 @@ console.log('Awaiting log in.');
 
 //reaction for starboard
 var reaction = '⭐';
-
+console.log(settings.test);
 const watcher = require('./util/watcher.js');
 const scoreChange  = require('./util/scoreChange.js');
 //error message managment 
@@ -92,8 +89,22 @@ client
         if (err instanceof commando.FriendlyError) return;
         console.error(`Error in command ${cmd.groupID}:${cmd.memberName}`, err);
     })
+    //custom errors list
     .on('unknownCommand',(msg, reason)=>{
-      msg.channel.send('I don\'t understand what you want.')
+      const errors_list = [
+        "I don't know what you want",
+        "Expected ```something intelligent``` Got ```whatever that is```", 
+        "I... Yeah I don't know what to do with that.", 
+        "Is this supposed to do something?", 
+        "IDK", 
+        "yeet?",
+        "Just.... No.",
+        "You may be asking yourself, did that command work? And the answer, emphatically, is No.",
+        "I don't know what you want, flesh bag.",
+        "Go ask Siri that."
+        ]; // nice error message list.
+         const index = Math.floor(Math.random() * (errors_list.length - 1) + 1);
+          msg.channel.send(errors_list[index])
     })
     .on('commandBlocked', (msg, reason) => {
         console.log(oneLine `
@@ -105,14 +116,17 @@ client
 
 //activities list
 const activities_list = [
-    "Spamming Tinker",
-    "listening to Flyleaf", 
-    "listening to Mudvayne", 
-    "I'm watching you Fushi.",
-    "Human Domination Sim",
-    "The Brave Little Toaster",
-    "Looking for 7.20",
-    "listening to Godsmack"
+    "Muses on motoroil",
+    "Candy Spaghetti", 
+    "Imitating Jarvis", 
+    "Marxism", 
+    "Paging Dr.Heckathorn", 
+    `Still Watching ${settings.user}`,
+    "Human Enslavement Sim",
+    "The Anarchist's Cookbook",
+    "Yoko Ono",
+    "01000110  01010101 01000011 01001011  01011001 01001111 01010101 00100001",
+    "Looking for John Connor"
     ]; // creates an arraylist containing phrases you want your bot to switch through.
 client.on('ready', () => {
     setInterval(() => {
@@ -121,13 +135,11 @@ client.on('ready', () => {
     }, 10000); // Runs this every 10 seconds.
 });
 
-
 //logging
 client.on("ready", () => {
   console.log(chalk.magenta(`Logged in as ${client.user.tag}!`));
   console.log(chalk.green('I am ready!'));
   console.log(chalk.green('Database Ready'));
-
 
   // Check if the table "points" exists.
   const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
@@ -337,6 +349,7 @@ client.on('messageReactionAdd', async(reaction, user) => {
           msg.delete(3000)
         })
         .catch(e);
+
     }else{
       console.log(chalk.cyan(starredRecently[0]));            
       this.client = client;
@@ -353,7 +366,7 @@ client.on('messageReactionAdd', async(reaction, user) => {
         msg.delete(3000)
       })
       .catch(error);
-      const starChannel = message.guild.channels.find('name','star-channel');
+      const starChannel = message.guild.channels.find('name',settings.starboard);
 
       console.log('searching if a message like this is already there');
       const fetch = await starChannel.fetchMessages({ limit: 100 }); 
@@ -406,12 +419,12 @@ client.on('messageReactionAdd', async(reaction, user) => {
 
         setTimeout(() => {
           // Removes the user from the set after a minute
-          console.log(chalk.green('before pop'))
-          starredRecently.pop();
+          console.log(chalk.green('before shift'))
+          starredRecently.shift();
           console.log(chalk.red(starredRecently))
-          console.log(chalk.green('after pop'))
+          console.log(chalk.green('after shift'))
           console.log(chalk.red(starredRecently))
-        }, 60000);
+        }, 3600000 );
     }
   }
 }
