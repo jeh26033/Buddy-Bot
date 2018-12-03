@@ -9,6 +9,7 @@
 		"start": "node bot.js"
 	},
 	"dependencies": {
+		"cryptiles": ">=4.1.2",
 		"@gaikema/emojify": "^1.0.2",
 		"better-sqlite3": "^4.1.4",
 		"bufferutil": "3.0.2",
