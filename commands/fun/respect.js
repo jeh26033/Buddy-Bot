@@ -5,7 +5,7 @@ module.exports = class RespectsCommand extends Command {
   constructor(bot) {
     super(bot, {
       name: 'respects',
-      aliases: ['f'],
+      aliases: ['f','respect'],
       group: 'fun',
       memberName: 'respects',
       description: 'Press F to pay respects.',

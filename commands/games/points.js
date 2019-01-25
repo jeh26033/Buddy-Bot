@@ -24,9 +24,9 @@ module.exports = class PointsCommand extends Command {
       }
 
     run(message, args) {
-      ;
+      
 
-    // If the score doesn't exist (new user), initialize with defaults. 
+
 
           
  

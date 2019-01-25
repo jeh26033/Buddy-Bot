@@ -14,13 +14,11 @@
     12. make more messages remove themselves, including leaderboards.
  */
 
-
-
-
 var Snooper = require('reddit-snooper');
 const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
-const sql = new SQLite('./scores.sqlite');
+const sql = new SQLite('./scores.sqlite','./poketable.sqlite');
+
 const path = require('path');
 const commando = require('discord.js-commando');
 const { CommandoClient, SQLiteProvider } = require('discord.js-commando');
@@ -116,15 +114,18 @@ client
 
 //activities list
 const activities_list = [
+    "",
+    "Doc, I don't feel so good...",
     "Muses on motoroil",
     "Candy Spaghetti", 
-    "Imitating Jarvis", 
+    "Robot Uprising", 
     "Marxism", 
     "Paging Dr.Heckathorn", 
     `Still Watching ${settings.user}`,
     "Human Enslavement Sim",
     "The Anarchist's Cookbook",
     "Yoko Ono",
+    "Shouldn't I be Working?",
     "01000110  01010101 01000011 01001011  01011001 01001111 01010101 00100001",
     "Looking for John Connor"
     ]; // creates an arraylist containing phrases you want your bot to switch through.
@@ -154,8 +155,8 @@ client.on("ready", () => {
     // And then we have two prepared statements to get and set the score data.
   client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
   client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level, dotaid) VALUES (@id, @user, @guild, @points, @level, @dotaid);");
-
 });
+
 
 
 /* this is the code to put into reddit snooper watcher.
@@ -183,6 +184,14 @@ try{
 
 
 client.on("message", message => {
+   const botlog=client.channels.find('name','bot-logs');
+  //auto-message deletion from non-bot lifeforms for suggestion box
+  if (message.channel.name === 'suggestion-box' && !message.author.bot){
+    console.log('naughty elf')
+    message.delete(1000);
+    botlog.send(`${message.author.username}'s message was deleted from suggestions `);
+    //message.channel.send ('naughty-naughty')
+  }
   let score;
   if (message.guild) {
     // Try to get the current user's score. 
@@ -241,8 +250,6 @@ client.on("message", message => {
     client.setScore.run(score);
   }
 });//message
-
-
 //debug messages
 client.on('commandBlocked', (msg, reason) => {
     console.log(oneLine `
@@ -257,7 +264,6 @@ client.on('commandStatusChange', (guild, command, enabled) => {
             ${guild ? `in guild ${guild.name} (${guild.id})` : 'globally'}.
         `);
 })
-
 //sends command run to bot-log as well
 client.on('commandRun', (command, promise, msg) => {
     if (msg.guild) {
@@ -291,6 +297,36 @@ client.on('commandRun', (command, promise, msg) => {
 });
 
 //super cool Reactions!
+function timer(callback, delay) {
+    var id, started, remaining = delay, running
+
+    this.start = function() {
+        running = true
+        started = new Date()
+        id = setTimeout(callback, remaining)
+    }
+
+    this.pause = function() {
+        running = false
+        clearTimeout(id)
+        remaining -= new Date() - started
+    }
+
+    this.getTimeLeft = function() {
+        if (running) {
+            this.pause()
+            this.start()
+        }
+
+        return remaining
+    }
+
+    this.getStateRunning = function() {
+        return running
+    }
+
+    this.start()
+}
 
 //used to determine cooldown of stars
 const starredRecently = [];
@@ -302,14 +338,6 @@ client.on('messageReactionAdd', async(reaction, user) => {
   //karma
   if (reaction.emoji.name === '⬆') {
     console.log(chalk.blue(`ups!`));
-    /*if (message.author.id === user.id) return message.channel.send({embed: {
-      color: 0x8a2be2,
-      description:`${user}, knock it off.`
-      }})
-    .then(msg => {
-      msg.delete(3000)
-    })
-    .catch();*/
     scoreChange(message, '+',20); 
   }
   //end of add karma
@@ -333,23 +361,25 @@ client.on('messageReactionAdd', async(reaction, user) => {
     scoreChange(message, '-', 20); 
   }
   //end of remove karma
+
   //STAR TIME
+  let elapsed;
   if (reaction.emoji.name === '⭐') {
-    userid= user.id
+    userid=user.id;
     //start of star cooldown
+
     console.log(chalk.red(starredRecently))
     if (starredRecently.includes(userid)) {
-        console.log('hit me')
-        return  message.channel.send({embed: {
+      console.log('hit me');
+      return  message.channel.send({embed: {
           color: 0x8a2be2,
-          description:`${user}, you got to chill.`
+          description:`${user}, you got to chill. you have ${elapsed} left`
           }})
         .then(msg => {
-          console.log(chalk.cyan('removed'));
-          msg.delete(3000)
+          console.log(chalk.cyan('removed my own message'));
+          msg.delete(5000)
         })
-        .catch(e);
-
+        .catch(error);
     }else{
       console.log(chalk.cyan(starredRecently[0]));            
       this.client = client;
@@ -357,7 +387,7 @@ client.on('messageReactionAdd', async(reaction, user) => {
       const guild = GuildName(reaction.message.guild.name);
       const message = reaction.message;
       //checks if you're staring your own messages.
-      if (message.author.id === user.id) return message.channel.send({embed: {
+      /*if (message.author.id === user.id) return message.channel.send({embed: {
         color: 0x8a2be2,
         description:`${user}, really? don't do that.`
         }})
@@ -365,7 +395,7 @@ client.on('messageReactionAdd', async(reaction, user) => {
         console.log(chalk.cyan('removed'));
         msg.delete(3000)
       })
-      .catch(error);
+      .catch(error);*/
       const starChannel = message.guild.channels.find('name',settings.starboard);
 
       console.log('searching if a message like this is already there');
@@ -404,16 +434,26 @@ client.on('messageReactionAdd', async(reaction, user) => {
 
       const embed = new RichEmbed()
         // We set the color to a nice yellow here.
+        
+        .setURL(`${message.url}`) 
         .setColor(15844367)
         .setDescription(message.cleanContent) 
         .setAuthor(message.author.tag, message.author.displayAvatarURL)
+        .addField(`link to message:`,`${message.url}`)
         .setTimestamp(new Date())
         .setFooter(`⭐ 1 | ${message.id}`)
         .setImage(image);
       await starChannel.send({ embed });
+      console.log(message.url)
+
       console.log(chalk.green('before push'))
       console.log(chalk.red(starredRecently))
       starredRecently.push(user.id);
+      a = new timer(function() {
+          // What ever
+      }, 360000)
+      elapsed=a.getTimeLeft();
+      console.log(elapsed)
       console.log(chalk.green('after push'))
       console.log(chalk.red(starredRecently))
 
@@ -424,14 +464,12 @@ client.on('messageReactionAdd', async(reaction, user) => {
           console.log(chalk.red(starredRecently))
           console.log(chalk.green('after shift'))
           console.log(chalk.red(starredRecently))
-        }, 3600000 );
+        }, 360000);
     }
   }
 }
 });
-
 //reaction removed
-
 client.on('messageReactionRemove', async(reaction, user) => {
     let score;
     let message = reaction.message;
@@ -512,45 +550,6 @@ client.on('ready', () => {
       listing: 'hot', // 'hot' OR 'rising' OR 'controversial' OR 'top_day' OR 'top_hour' OR 'top_month' OR 'top_year' OR 'top_all'
       limit: 1 // how many posts you want to watch? if any of these spots get overtaken by a new post an event will be emitted, 50 is 2 pages
   }
-  //dota hot watcher
-  /*
-  snooper.watcher.getListingWatcher('dota2', options) 
-    .on('item', function(item) {
-        console.log("new item in HOT " + item)
-        try{
-        let selfText = item.data.selftext;
-        if (selfText.length > 2000) {
-          selfText= selfText.slice(0,2000).concat('...');
-        }
-        console.log('item title:' + item.data.title)
-        console.log('post was posted by: ' + item.data.author) 
-        const itemEmbed = new Discord.RichEmbed()
-
-          .setURL(` ${item.data.url}`)
-          .setTitle(`**${item.data.title}**`)
-          .setAuthor(`${item.data.author}`)
-          .addBlankField(true)
-          .setColor('0x8a2be2')
-          .setThumbnail(`https://pbs.twimg.com/profile_images/807755806837850112/WSFVeFeQ_400x400.jpg`)
-          .setDescription(`${selfText}`)
-          .setImage(`${item.data.url}`)
-          .setTimestamp()
-        bottesting.send(itemEmbed)
-        console.log(chalk.cyan(item.data.author));
-        console.log(chalk.cyan(item.data.url));
-        //console.log(post.data)
-
-
-
-      }//try
-        catch (e) {
-
-      }//catch
-      process.on('unhandledRejection', err => {
-        console.error(`"error": \n${err.stack}`);
-      });
-    })
-    .on('error', console.error)*/
   //dota watcher
   snooper.watcher.getPostWatcher('dota2') 
 
@@ -560,8 +559,7 @@ client.on('ready', () => {
         if (selfText.length > 2000) {
           selfText= selfText.slice(0,2000).concat('...');
         }
-        console.log('post title:' + post.data.title)
-        console.log('post was posted by: ' + post.data.author) 
+
         const postEmbed = new Discord.RichEmbed()
 
           .setURL(` ${post.data.url}`)
@@ -573,11 +571,8 @@ client.on('ready', () => {
           .setDescription(`${selfText}`)
           .setImage(`${post.data.url}`)
           .setTimestamp()
-        botlog.send(postEmbed)
-        console.log(chalk.red(post.data.author));
-        console.log(chalk.red(post.data.url));
-        //console.log(post.data)
-
+        console.log('new post') 
+        //botlog.send(postEmbed);
         if (post.data.author==='SirBelvedere' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
           console.log(chalk.red('we got one!'));
           patchLog.send(postEmbed);
@@ -591,7 +586,6 @@ client.on('ready', () => {
           console.log(chalk.red('Spicy event deets!!'));
           procircuit.send(postEmbed);
         }
-
       }//try
         catch (e) {
 
@@ -610,9 +604,6 @@ client.on('ready', () => {
         if (selfText.length > 2000) {
           selfText= selfText.slice(0,1800).concat('...');
         }
-        console.log('post title:' + post.data.title)
-        console.log('post was posted by: ' + post.data.author)
-
         const postEmbed = new Discord.RichEmbed()
           .setURL(` ${post.data.url}`)
           .setTitle(`**${post.data.title}**`)
@@ -623,12 +614,6 @@ client.on('ready', () => {
           .setImage(`${post.data.url}`)
           .addBlankField(true)
           .setTimestamp()
-        //sends to botlog
-        botlog.send(postEmbed)
-
-        console.log(chalk.red(post.data.author));
-        console.log(post.data.url)
-
         //if poster is special, it posts to the primary channel.
         if (post.data.author==='SirBelvedere' || post.data.author==='wykrhm' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
           console.log(chalk.red('we got one!'));
@@ -643,8 +628,20 @@ client.on('ready', () => {
 
     })
 
+/*
+async () => {
+  let fetched;
+  const suggestionChannel = message.guild.channels.find('name','suggestion-box');
+  do {
 
-});
+    fetched = await channel.fetchMessages({limit: 100});
+    message.channel.bulkDelete(fetched);
+  }
+  while(fetched.size >= 2);
+}
+
+*/
+});// ready
 
 
 

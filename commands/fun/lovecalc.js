@@ -14,7 +14,7 @@ module.exports = class LoveCommand extends Command {
             args: [{
                 key: 'user',
                 label: 'user',
-                prompt: 'Ba-Baka! How will I tell you, how much you love someone, if I don\'t know who!',
+                prompt:  'How will I tell you, how much you love someone, if I don\'t know who!',
                 type: 'user',
                 infinite: false
               }]

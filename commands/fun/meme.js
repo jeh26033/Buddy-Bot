@@ -9,12 +9,21 @@ module.exports = class MemeCommand extends Command {
             group: 'basic',
             memberName: 'memes',
             description: 'Sends a random meme',
-            examples: ['meme']
+            examples: ['meme'],
+
+            args: [{
+              'key': 'source',
+              'label': 'source',
+              'prompt': ' ',
+              'type': 'string',
+              'default': ' ',
+              'infinite': false
+            }]
         });
       }
 
-    run(msg) {
-        console.log('memeing you up, boss');
+    run(msg, args) {
+
         /*let toMeme = `
             https://i.redd.it/0ilh488xbudz.png
             https://cdn.discordapp.com/attachments/310611569794875404/353539349742092289/image.jpg
@@ -141,15 +150,34 @@ module.exports = class MemeCommand extends Command {
         
         memeList = memeList[Math.floor(Math.random() * memeList.length)];
         msg.say(memeList);*/
-
-      randomPuppy('dankmemes')
-          .then(url => {
-              console.log(url);
-           
-              msg.say(url)
-          })
- 
-       
-
-  };
+    if (args.source ===' ') { //default choice
+        randomPuppy('FULLCOMMUNISM')
+            .then(url => {
+                console.log(url);
+                msg.say(url)
+                msg.say("you can also use raw, awww, or wtf at the end of meme for different memes.")
+            })
+    }
+    else if (args.source==='raw') {
+        randomPuppy('dankmemes')
+            .then(url => {
+                console.log(url);
+                msg.say(url)
+            })
+    } 
+    else if (args.source==='awww') {
+        randomPuppy('wholesomememes')
+            .then(url => {
+                console.log(url);
+                msg.say(url)
+            })
+    } 
+    else if (args.source==='wtf') {
+        randomPuppy('surrealmemes')
+            .then(url => {
+                console.log(url);
+                msg.say(url)
+            })
+    } 
+  }
 }

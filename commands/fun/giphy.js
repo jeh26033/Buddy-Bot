@@ -25,6 +25,9 @@ module.exports = class GifCommand extends Command {
 
     
     async run(message, args, level) { 
+  
+      message.channel.startTyping(1);
+      message.channel.stopTyping();
 	/// Gif Search
 	 	let tag = args.tag;
 		client.search('gifs', {"q": `${tag}`,"limit":"1"})
@@ -39,7 +42,10 @@ module.exports = class GifCommand extends Command {
 		  	message.say('not sure what happened there');
 		  })
 
-	
+
+
+	 
+
 
 	}  	
 }
