@@ -3206,5 +3206,33 @@
   {
     "name": "marshadow",
     "imageURL": "https://www.serebii.net/sunmoon/pokemon/802.png"
+  },
+  {
+    "name": "poipole",
+    "imageURL": "https://www.serebii.net/sunmoon/pokemon/803.png"
+  },
+  {
+    "name": "naganadel",
+    "imageURL": "https://www.serebii.net/sunmoon/pokemon/804.png"
+  },
+  {
+    "name": "stakataka",
+    "imageURL": "https://www.serebii.net/sunmoon/pokemon/805.png"
+  },
+  {
+    "name": "blacephalon",
+    "imageURL": "https://www.serebii.net/sunmoon/pokemon/806.png"
+  },
+  {
+    "name": "zeraora",
+    "imageURL": "https://www.serebii.net/sunmoon/pokemon/807.png"
+  },
+  {
+    "name": "meltan",
+    "imageURL": "https://www.serebii.net/sunmoon/pokemon/808.png"
+  },
+  {
+    "name": "melmetal",
+    "imageURL": "https://www.serebii.net/sunmoon/pokemon/809.png"
   }
 ]

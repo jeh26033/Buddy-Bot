@@ -23,9 +23,8 @@ module.exports = class PokemenCommand extends Command {
         });
     }
   async run(message, args, level) { 
-    
-    const rand = Math.floor(Math.random() * 802);
-    const poke = rand > 0 ? rand : Math.floor(Math.random() * 802);
+    const num_poke = pokemon.length;
+    const poke = Math.floor(Math.random() * num_poke);
     const pokem = pokemon[poke];
 
     console.log(pokem);
@@ -42,13 +41,21 @@ module.exports = class PokemenCommand extends Command {
       msg.channel.startTyping();
       const filter = m => m.content === pokem.name.toLowerCase();
       const collector =await msg.channel.createMessageCollector(filter, { time: 15000 });
+      var gotCorrectAnswer = false;
       
-      collector.on('collect', m => m.reply(`YEET! Well done, ${pokem.name} was correct. Here's 50 BB`));
+      collector.on('collect', m => {
+        gotCorrectAnswer = true;
+        m.reply(`YEET! Well done, ${pokem.name} was correct. Here's 50 BB`);
+      });
       collector.on('collect', m => scoreChange(message, '+',50));
       collector.on('collect', m => collector.stop('end'));
-      msg.channel.stopTyping();
 
-      collector.on('end', m => message.channel.send(`The answer was ${pokem.name}!`));
+      collector.on('end', m => {
+        if( !gotCorrectAnswer ) {
+          message.channel.send(`The answer was ${pokem.name}!`);
+        }
+        msg.channel.stopTyping();
+      });
 
     
     //const answer = collector.first().content.toLowerCase();
