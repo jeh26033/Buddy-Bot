@@ -22,3 +22,5 @@ Key Features Include:
 <h3>Dumb meme shit</h3><p> Comes standard with every buddy bot!</p>
 
 
+<h2>Configuration and Setup</h2>
+<p>Buddy is setup to work right out of the box, but to get full use of buddy, you can customize a few things. Firstly, he should have all the requested permissions. Next, you should set designated channels for use as the Starboard and one for use as a botlog, which logs all of the commands buddy is using. To do this, run the !settings command, and you can choose from the options to set the starboard channel and botlog channel. Its recommended to make the starboard channel only able to accept messages from Buddy, as other people typing in it will break it. </p>
