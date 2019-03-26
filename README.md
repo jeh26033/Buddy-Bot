@@ -1,6 +1,6 @@
 # Buddy-Bot
-Invite buddy to your party!
-https://discordapp.com/api/oauth2/authorize?client_id=474236944461856778&permissions=268437504&scope=bot
+
+<a href ='https://discordapp.com/api/oauth2/authorize?client_id=474236944461856778&permissions=268437504&scope=bot'> Invite buddy to your party!</a>
 
 A fun general purpose Discord bot. Built using the great tools provided by Discord.js and Commando, Buddy can help you moderate, entertain, inform, and organize your discord server with his unique personality, and plethora of mostly useful commands. 
 
