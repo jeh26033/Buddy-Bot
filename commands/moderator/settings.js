@@ -6,8 +6,7 @@ const { RichEmbed } = require('discord.js');
 const fs = require('fs');
 const os = require('os');
 const client = new Discord.Client();
-//const settings = require("../../settings.json");
-const stalkSettings = require("../../stalkSettings.json");
+
 module.exports = class settingsCommand extends Command {
   constructor(client) {
     super(client, {
@@ -24,7 +23,7 @@ module.exports = class settingsCommand extends Command {
       args: [{
         key: 'setting',
         label: 'set',
-        prompt: 'What setting would you like to change? Options currently include: starboard and user',
+        prompt: 'What setting would you like to change? Options currently include: starboard',
         type: 'string',
         clientPermissions: ['MANAGE_ROLES'],
         infinite: false
@@ -46,13 +45,10 @@ module.exports = class settingsCommand extends Command {
 
     let guildName = `settings/settings_${message.guild.id}`
     let file = editJsonFile(`${guildName}.json`);
-
+    file.set('guildName',`${message.guild.name}`)
     // file.set("starboard", "");
-
     // file.set("botlog", "");
     // file.set("stalk", "false");
-
-
 
     //console.log(settings.starboard);
     console.log('verifying persimmons');

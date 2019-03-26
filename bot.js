@@ -26,8 +26,6 @@ const warn = chalk.keyword('orange');
 const debug = chalk.cyan;
 const dbots = require('superagent');
 const config = require("./config.json");
-//const settings = require(`./settings.json`);
-const stalkSettings = require("./stalkSettings.json");
 const { RichEmbed } = require('discord.js');
 
 
@@ -66,8 +64,8 @@ client.registry
     .registerDefaultCommands()
     .registerCommandsIn(path.join(__dirname, 'commands'));
 
-//reaction for starboard
-var reaction = '⭐';
+
+
 //watchers on the bot
 const testWatcher = require('./util/watcher.js');
 const dotaWatcher = require('./util/dotawatcher.js');
@@ -526,7 +524,7 @@ client.on('ready',()=>{
   const apexlegends = client.channels.find('name', 'we-apex-legends-now');
   //testWatcher(botlog);
   dotaWatcher(botlog, patchLog);
-  apexWatcher(botlog, apexlegends)
+  //apexWatcher(botlog, apexlegends)
 });
 
 client.on('guildMemberAdd', member => {
@@ -567,7 +565,7 @@ client.on('typingStart',async(channel, user)=>{
   
     const index = Math.floor(Math.random() * (insult_list.length - 1) + 1); // generates a random number between 1 and the length of the activities array list (in this case 5).
     let insult=(insult_list[index]); // sets bot's activities to one of the phrases in the arraylist.
-    if (user.username=='heckfu' && stalkSettings.stalk=="true") {
+    if (user.username=='heckfu' && file.stalk=="true") {
       channel.send(insult)
     }
   setTimeout(() => {console.log('timeout')},40000); // Runs this every 40 seconds.
