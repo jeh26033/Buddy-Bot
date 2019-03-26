@@ -17,7 +17,7 @@ module.exports = class DotaCommand extends Command {
 
             key: 'account_id',
             label: 'account_id',
-            prompt: 'Enter your player ID to use my Dota commands!',
+            prompt: 'Enter your player ID to use my Dota commands! You can find it on Dotabuff, on your player page.',
             type: 'float',
             infinite: false
           }
@@ -39,6 +39,9 @@ async run(message, args) {
   // If the score doesn't exist (new user), initialize with defaults. 
   if (!score.dotaid) {
     score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1, dotaid:args.account_id };
+  }else{
+    score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, dotaid:args.account_id };
+
   }
 
   console.log(score.dotaid);

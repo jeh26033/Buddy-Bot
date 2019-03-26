@@ -1,4 +1,3 @@
-console.log('hello from the watcher module!');
 const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
@@ -6,16 +5,15 @@ const {Command} = require('discord.js-commando');
 const commando = require('discord.js-commando');
 const client = new Discord.Client();
 var Snooper = require('reddit-snooper')
-
 const chalk = require('chalk');
 
  
 
-function testWatcher(botlog,dotachannel){
+function dotaWatcher(botlog,dotachannel){
 
-  console.log('watcher ready')
+  console.log('dota watcher ready')
   
-  botlog.send('test watcher starting')
+  botlog.send('dota Watcher starting up')
   snooper = new Snooper(
     {
         // credential information is not needed for snooper.watcher
@@ -26,16 +24,19 @@ function testWatcher(botlog,dotachannel){
         user_agent: 'OPTIONAL user agent for your bot',
 
         automatic_retries: true, // automatically handles condition when reddit says 'you are doing this too much'
-        api_requests_per_minute: 30 // api requests will be spread out in order to play nicely with Reddit
+        api_requests_per_minute: 10 // api requests will be spread out in order to play nicely with Reddit
     });
-      
-snooper.watcher.getPostWatcher('pics') 
+
+  //dota watcher
+  snooper.watcher.getPostWatcher('dota2') 
+
     .on('post', function(post) {
     try{
-        console.log('pics post title:' + post.data.title)
-        console.log('pics post was posted by: ' + post.data.author)
+        let selfText = post.data.selftext;
+        if (selfText.length > 2000) {
+          selfText= selfText.slice(0,2000).concat('...');
+        }
 
-              
         const postEmbed = new Discord.RichEmbed()
 
           .setURL(` ${post.data.url}`)
@@ -44,14 +45,11 @@ snooper.watcher.getPostWatcher('pics')
           .addBlankField(true)
           .setColor('0x8a2be2')
           .setThumbnail(`https://pbs.twimg.com/profile_images/807755806837850112/WSFVeFeQ_400x400.jpg`)
-          .setDescription(`${post.data.selftext}`)
+          .setDescription(`${selfText}`)
           .setImage(`${post.data.url}`)
           .setTimestamp()
-          
-        botlog.send(postEmbed)
-
-        console.log(chalk.red(post.data.author));
-        console.log(post.data.url)
+        //botlog.send(postEmbed)
+    
         //console.log(post.data)
 
         if (post.data.author==='SirBelvedere' || post.data.author==='wykrhm' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
@@ -60,13 +58,14 @@ snooper.watcher.getPostWatcher('pics')
         }
 
       }//try
-        catch(error){
-        console.error(error);
+        catch (e) {
+
       }//catch
+      process.on('unhandledRejection', err => {
+        console.error(`"error": \n${err.stack}`);
+      }); 
     })
-  
-}
+     .on('error', console.error);
 
-
-
-module.exports = testWatcher;
+  }
+module.exports = dotaWatcher;

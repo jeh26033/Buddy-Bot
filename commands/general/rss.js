@@ -70,7 +70,7 @@ getFeed (urlTestFeed, function (err, feedItems) {
       }
     console.log ("There are " + feedItems.length + " items in the feed.\n");
     msg.channel.send("There are " + feedItems.length + " items in the feed.\n")
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < 1; i++) {
       
  
      

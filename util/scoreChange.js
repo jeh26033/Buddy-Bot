@@ -22,11 +22,16 @@ const client = new Discord.Client();
       console.log(karmicPower);
       const curPts = score.points;
       if (operation=== '-') {
-        score.points -= karmicPower;
+        Math.floor(score.points -= karmicPower);
         client.setScore.run(score);
       }
       if (operation=== '+') {
-        score.points += karmicPower;
+        Math.floor(score.points += karmicPower);
+        client.setScore.run(score);
+      }
+      if (operation=== '/') {
+        Math.floor(score.points = 0);
+        Math.floor(score.level = 0);
         client.setScore.run(score);
       }
     } catch (e) {

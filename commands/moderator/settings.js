@@ -1,10 +1,13 @@
+const Discord = require('discord.js');
+const editJsonFile = require("edit-json-file");
 const { Command } = require('discord.js-commando');
 const { oneLine } = require('common-tags');
 const { RichEmbed } = require('discord.js');
 const fs = require('fs');
 const os = require('os');
-const settings = require("../../settings.json");
-
+const client = new Discord.Client();
+//const settings = require("../../settings.json");
+const stalkSettings = require("../../stalkSettings.json");
 module.exports = class settingsCommand extends Command {
   constructor(client) {
     super(client, {
@@ -13,7 +16,7 @@ module.exports = class settingsCommand extends Command {
       memberName: 'settings',
       description: 'changes various settings',
       details: oneLine`
-        use this command when introducing your new buddy to your server.
+        Use this command when introducing your new buddy to your server.
         This will set multiple variables such as: what channel to use for stars,
         a bot-log, a user to make fun of, etc. 
 			`,
@@ -40,30 +43,42 @@ module.exports = class settingsCommand extends Command {
   
 
   run(message, args) {
-    console.log(settings.starboard);
+
+    let guildName = `settings/settings_${message.guild.id}`
+    let file = editJsonFile(`${guildName}.json`);
+
+    // file.set("starboard", "");
+
+    // file.set("botlog", "");
+    // file.set("stalk", "false");
+
+
+
+    //console.log(settings.starboard);
     console.log('verifying persimmons');
     if(!message.member.hasPermission('MANAGE_ROLES')) return message.say('You have no power here!');
 
 
     if (args.setting === 'starboard') {
       console.log('changing starboard');
-      let settings = {
-        starboard: args.command,
-      }
-      let data = JSON.stringify(settings, null, 2);
-      fs.writeFile('settings.json', data, err => console.error);
-      //fs.writeFileSync('settings.json', data);
+      file.set("starboard", args.command);
 
     }
-    if (args.setting === 'user') {
-      console.log('changing user');
-      let settings = {
-        user: args.command,
-      }
-      let data = JSON.stringify(settings, null, 2);
-      fs.writeFileSync('settings.json', data);
+
+    if (args.setting === 'stalk') {
+      console.log('changing stalk setting');
+      file.set("stalk", args.command);
 
     }
+    if (args.setting === 'print') {
+      var myJSON = JSON.stringify(file.get());
+      console.log('printing settings');
+      message.channel.send(myJSON);
+
+    }
+   
+    file.save();
+    message.channel.send('resetting...')
   }
   
 };

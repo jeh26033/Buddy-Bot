@@ -5,6 +5,7 @@ const commando = require('discord.js-commando');
 const { oneLine, stripIndents } = require('common-tags');
 const { RichEmbed } = require('discord.js');
 const Discord = require('discord.js');
+const client = new Discord.Client();
 
 module.exports = class InhouseCommand extends Command {
     constructor(client) {
@@ -25,44 +26,19 @@ module.exports = class InhouseCommand extends Command {
         });
 
     }
-    hasPermission(msg) {
-    if (!this.client.isOwner(msg.author)) return 'Only the bot owner(s) may use this command.';    
-    return this.client.isOwner(msg.author);
-}
+
     async run(message, args) {
+    if(!message.member.hasPermission('MANAGE_ROLES')) return message.say('You have no power here!'); 
+        
 
         //gets the dota role for the specific server
         let dotaRole = message.guild.roles.find('name','Dota 2');
-        
-        //getting the list of people who have subbed to the dota role
-        //console.log(message.guild.roles.get(dotaRole.id).members)
-
-        //makes the list of all people with dota role by ID
-        let potentialDotaBois= message.guild.roles.get(dotaRole.id).members.map(m=>m.user.id).join('\n');
-
-        //makes the list of all people with dota role by name
-        let potentialDotaBoisName= message.guild.roles.get(dotaRole.id).members.map(m=>m.user.username).join('\n');
-
-        //splits that list into an array
-        let potentialDotaBoisArray = potentialDotaBois.split('\n')
-        
 
         //the pingy part.
         console.log(args.ping)
         if (args.ping==='yes') {
-            /*for (var i = potentialDotaBoisArray.length - 1; i >= 0; i--) {
-                message.channel.send("<@!" + potentialDotaBoisArray[i] + ">");*/
-                message.say('@here');
-            
+            message.say('@here');
         }
-
-        //the embed for list of people with the role
-        /*
-        const ListEmbed = new Discord.RichEmbed()
-            .setTitle(`Users with dota 2 role`)
-            .setDescription(potentialDotaBoisName)
-        message.channel.send(ListEmbed);
-        */
 
         //the starting count
         let count = 0;
@@ -75,24 +51,25 @@ module.exports = class InhouseCommand extends Command {
 
         //current list message
 
+        //announcment channel
+        const announcmentChannel= this.client.channels.find('name','announcements'); 
+
         let currentList= `we have ${dotaBoys.length} DotaBois and gurls`;
         //message.channel.send(currentList);
+
         const reactEmbed = new Discord.RichEmbed()
             .setColor('0x8a2be2')
             .setTitle(`React to this message with 🏠 to get a spot in the next Whiskey Inhouse`)
             .setDescription(`Users will be alerted when a full house is achieved. This lasts for 1 hour.`)
 
-        message.channel.send(reactEmbed)
-        .then(msg => {
-            msg.delete(3600000)
-            
-            })
-            .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
+        //announcmentChannel.send(reactEmbed)
+        //const msg = await message.channel.send( reactEmbed )
+        const msg = await announcmentChannel.send(reactEmbed)
+        msg.react('🏠');
 
-        
         this.client.on('messageReactionAdd', (reaction, user) => {
 
-            if(reaction.emoji.name === "🏠") {
+            if(reaction.emoji.name === "🏠" && user.id!= msg.author.id) {
 
                 //the person who is in the inhouse queue    
                 let dotaBoi= reaction.message.guild.members.get(user.id)
@@ -110,12 +87,17 @@ module.exports = class InhouseCommand extends Command {
 
                 //message to update
 
-                this.client.user.lastMessage.edit(
+                msg.edit(
                     {embed: {
-                      color: 3447003,
-                      description:`we have ${ dotaBoys.length} DotaBois and gurls\n${dotaBoysNameArray.join(' ,')}`
+                      color: 0x8a2be2,
+                      description:`We have ${ dotaBoys.length} DotaBois and gurls\n${dotaBoysNameArray.join(', ')}`
                 }})
-                    
+
+               const reactEmbedReminder = new Discord.RichEmbed()
+                      .setColor('0x8a2be2')
+                      .setDescription(`We have ${ dotaBoys.length} DotaBois and gurls\n${dotaBoysNameArray.join(', ')}\n\n Head to announcements to enter this exciting edition of WHISKEY BUSINESS INHOUSE`)
+                message.channel.send(reactEmbedReminder)
+                
                 //the debugs
                 console.log(`dotaBoys:${dotaBoys}`)
                 console.log(`dotaBoi:${dotaBoi}`)
@@ -132,20 +114,18 @@ module.exports = class InhouseCommand extends Command {
 
                     //the embed
                     const fullInhouse = new Discord.RichEmbed()
-                        .setTitle(`Dota Time!`)
+                        .setTitle(`🎉Dota Time!🎉`)
                         .setDescription(dotaBoys)
                     message.channel.send(fullInhouse)
                     
                     //clears the arrays
                     dotaBoys.length = 0
-                    potentialDotaBoisArray.length=0
                     dotaBoysNameArray.length=0
-                    //console.log(reaction.message.guild.members.get(user.id));
                 }
             }
         });
         this.client.on('messageReactionRemove', (reaction, user) => {
-            if(reaction.emoji.name === "🏠") {
+            if(reaction.emoji.name === "🏠" && user.id!=  msg.author.id) {
                 //the person who is in the inhouse queue   
                 let dotaBoyName = user.username; 
                 let dotaBoi= reaction.message.guild.members.get(user.id)
@@ -156,21 +136,24 @@ module.exports = class InhouseCommand extends Command {
                 dotaBoysNameArray.pop(dotaBoyName)
 
                 count--
-                this.client.user.lastMessage.edit(
+                msg.edit(
                     {embed: {
-                              color: 3447003,
-                              description:`we have ${dotaBoys.length} DotaBois and gurls\n${ dotaBoysNameArray.join(' ,')}`
+                      color: 0x8a2be2,
+                      description:`We have ${dotaBoys.length} DotaBois and gurls\n${ dotaBoysNameArray.join(' ,')}`
                     }})
                // this.client.user.lastMessage.edit(`we have ${dotaBoys.length} DotaBois and gurls`);
-                
+                const reactEmbedReminder = new Discord.RichEmbed()
+                      .setColor('0x8a2be2')
+                      .setDescription(`We have ${ dotaBoys.length} DotaBois and gurls\n${dotaBoysNameArray.join(', ')}\n\n Head to announcements to enter this exciting edition of WHISKEY BUSINESS INHOUSE`)
+                message.channel.send(reactEmbedReminder)
                 
 
                 console.log(`dotaBoys:${dotaBoys}`)
                 console.log(`dotaBoy:${dotaBoi}`)
                 console.log(`Removed ${count}`);
             }
-        });
+        })
         
-
+    msg.delete([3600000]);
     }
 };

@@ -35,23 +35,24 @@ module.exports = class PointsCommand extends Command {
         if (!score.dotaid) {
            message.reply({embed: {
                 color: 0x8a2be2,
-                description: `:sparkles: You Currently Have **${score.points}** Buddybucks and are Level **${score.level}**. :sparkles: `,
+                description: `:sparkles: You Currently Have **${Math.floor(score.points)}** Buddybucks and are Level **${score.level}**. :sparkles: `,
                 value: `Run the dota command to input your dota 2 ID and unlock other dota-related commands!`
               }});
 
               }else{
                 message.reply({embed: {
                 color: 0x8a2be2,
-                description: oneLine`:sparkles: You Currently Have **${score.points}** Buddybucks, are Level **${score.level}**, Dota Id is **${score.dotaid}** :sparkles: `
+                description: oneLine`:sparkles: You Currently Have **${Math.floor(score.points)}** Buddybucks, are Level **${score.level}**, Dota Id is **${score.dotaid}** :sparkles: `
               }});
               }
          
       } else {
         let score = this.client.getScore.get(args.user.id, message.guild.id) 
+        //score= Math.floor(score);
         if (!score.dotaid) {
            message.reply({embed: {
                 color: 0x8a2be2,
-                description: `:sparkles: ${args.user} currently has **${score.points}** Buddybucks and are Level **${score.level}**. :sparkles: `,
+                description: `:sparkles: ${args.user} currently has **${Math.floor(score.points)}** Buddybucks and are Level **${score.level}**. :sparkles: `,
                 value: `Run the dota command to input your dota 2 ID and unlock other dota-related commands!`
               }});
 

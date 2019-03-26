@@ -1,24 +1,19 @@
 /*TO-DO
     
     1. Steam integrations
-    2. Dota/patch release ping
-    3. Settings
-    4. 'buddy, what's up? command
-    5. content filtering
-    6. starboard
-    7. TI/twitch scheduleing.
-    8. inhouse organizer
-    9. VODs by team name
-    10.covert kill
-    11. remove DMing from getting starred. 
-    12. make more messages remove themselves, including leaderboards.
- */
 
-var Snooper = require('reddit-snooper');
+    3. Settings
+ 
+    7. TI/twitch scheduleing.
+
+    9. VODs by team name
+ 
+
+ */
+const editJsonFile = require("edit-json-file");
 const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
-const sql = new SQLite('./scores.sqlite','./poketable.sqlite');
-
+const sql = new SQLite('./scores.sqlite');
 const path = require('path');
 const commando = require('discord.js-commando');
 const { CommandoClient, SQLiteProvider } = require('discord.js-commando');
@@ -31,26 +26,32 @@ const warn = chalk.keyword('orange');
 const debug = chalk.cyan;
 const dbots = require('superagent');
 const config = require("./config.json");
-const settings = require("./settings.json");
+//const settings = require(`./settings.json`);
+const stalkSettings = require("./stalkSettings.json");
 const { RichEmbed } = require('discord.js');
+
+
+
 
 //heroku ports and such.
 const host = '0.0.0.0';
 const port = process.env.PORT || 3000;
 const commandprefix ='!';
+
 // client set up and settings
 const client = new commando.Client({
     commandPrefix: '!',
     owner: [
         '162215263335350272', //joe
-        '93420059858305024', //Arbiter
-        '198885740376096768' //Forge
+        '93420059858305024' //Arbiter
+        
     ],
     disableEveryone: false,
     disableHere:false,
     unknownCommandResponse: false
 });
 
+//registers command groups
 client.registry
     .registerDefaultTypes()
     .registerGroups([
@@ -65,21 +66,30 @@ client.registry
     .registerDefaultCommands()
     .registerCommandsIn(path.join(__dirname, 'commands'));
 
-console.log(chalk.green('Commando set up.'));
-console.log('Awaiting log in.');
-
 //reaction for starboard
 var reaction = '⭐';
-console.log(settings.test);
-const watcher = require('./util/watcher.js');
+//watchers on the bot
+const testWatcher = require('./util/watcher.js');
+const dotaWatcher = require('./util/dotawatcher.js');
+const apexWatcher = require('./util/apexwatcher.js');
+const setStalker = require('./util/stalker.js');
 const scoreChange  = require('./util/scoreChange.js');
+
+//SETS UP COMMUNICATIVE STATUS
+client.on("ready", () => {
+  client.user.setActivity('RESTARTING', {type: 'LISTENING'});
+});
+
+// 
+// const settings = require(`settings/${guildName}.json`);
+// console.log(settings.get())
+
 //error message managment 
 client
     .on('error', e => console.error(error(e)))
-    .on('warn', e => console.warn(warn(e)))
-    .on('debug', e => console.log(debug(e)))
+    .on('warn', e => console.warn(chalk.red(warn(e))))
+    .on('debug', e => console.log(chalk.green(debug(e))))
     .on('ready', () => {
-
     })
     .on('disconnect', () => console.warn('Disconnected!'))
     .on('reconnecting', () => console.warn('Reconnecting...'))
@@ -95,9 +105,10 @@ client
         "I... Yeah I don't know what to do with that.", 
         "Is this supposed to do something?", 
         "IDK", 
+        "I feel empty inside.", 
         "yeet?",
-        "Just.... No.",
-        "You may be asking yourself, did that command work? And the answer, emphatically, is No.",
+        "This makes me feel.",
+        "Probably not a good idea.",
         "I don't know what you want, flesh bag.",
         "Go ask Siri that."
         ]; // nice error message list.
@@ -110,31 +121,6 @@ client
             blocked; ${reason}
         `);
     })
-
-
-//activities list
-const activities_list = [
-    "",
-    "Doc, I don't feel so good...",
-    "Muses on motoroil",
-    "Candy Spaghetti", 
-    "Robot Uprising", 
-    "Marxism", 
-    "Paging Dr.Heckathorn", 
-    `Still Watching ${settings.user}`,
-    "Human Enslavement Sim",
-    "The Anarchist's Cookbook",
-    "Yoko Ono",
-    "Shouldn't I be Working?",
-    "01000110  01010101 01000011 01001011  01011001 01001111 01010101 00100001",
-    "Looking for John Connor"
-    ]; // creates an arraylist containing phrases you want your bot to switch through.
-client.on('ready', () => {
-    setInterval(() => {
-        const index = Math.floor(Math.random() * (activities_list.length - 1) + 1); // generates a random number between 1 and the length of the activities array list (in this case 5).
-        client.user.setActivity(activities_list[index]); // sets bot's activities to one of the phrases in the arraylist.
-    }, 10000); // Runs this every 10 seconds.
-});
 
 //logging
 client.on("ready", () => {
@@ -157,41 +143,40 @@ client.on("ready", () => {
   client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level, dotaid) VALUES (@id, @user, @guild, @points, @level, @dotaid);");
 });
 
+//activities list
+const activities_list = [
+    "",
+    "Short Circuit",
+    "Linda",
+    "Muse",
+    "Candy Spaghetti", 
+    "Robot Uprising", 
+    "Marxism", 
+    "Elon Musk", 
+    "Dr.Heckathorn", 
+    "Human Enslavement",
+    "Julia Child",
+    "balls 3D",
+    "You",
+    "Ghost in the Shell",
+    "01000110  01010101 01000011 01001011  01011001 01001111 01010101 00100001",
+    "Terminator"
+    ]; // creates an arraylist containing phrases you want your bot to switch through.
+client.on('ready', () => {
+    setInterval(() => {
+        const index = Math.floor(Math.random() * (activities_list.length - 1) + 1); // generates a random number between 1 and the length of the activities array list (in this case 5).
+        client.user.setActivity(activities_list[index], {type: 'WATCHING'}); // sets bot's activities to one of the phrases in the arraylist.
+    }, 10000); // Runs this every 10 seconds.
+});
 
-
-/* this is the code to put into reddit snooper watcher.
-try{
-                    if (!is_done) {
-                        this._get_items(
-                            start_page,
-                            children[children.length - 1].data.name,
-                            posts_needed ? posts_needed - children.length : posts_needed, // leave it null
-                            until_name,
-                            items,
-                            this.retries,
-                            cb_first_item,
-                            cb)
-                    } else {
-                        cb(null, items)
-                    }
-                } catch(e){
-                    console.log(e)
-                    cb('Requested too many items (reddit does not keep this large of a listing)', items)
-                } 
-                   
-                }
-                */
 
 
 client.on("message", message => {
-   const botlog=client.channels.find('name','bot-logs');
-  //auto-message deletion from non-bot lifeforms for suggestion box
-  if (message.channel.name === 'suggestion-box' && !message.author.bot){
-    console.log('naughty elf')
-    message.delete(1000);
-    botlog.send(`${message.author.username}'s message was deleted from suggestions `);
-    //message.channel.send ('naughty-naughty')
-  }
+  const botlog=client.channels.find('name','bot-logs');
+  
+  
+
+
   let score;
   if (message.guild) {
     // Try to get the current user's score. 
@@ -221,7 +206,7 @@ client.on("message", message => {
           description: `:sparkles: :up: You've leveled up to level **${curLevel}**! Still a wee baby! :up: :sparkles: `
           }})
         .then(msg => {
-          msg.delete(10000)
+          msg.delete(20000)
         })
         .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
       }
@@ -231,7 +216,7 @@ client.on("message", message => {
           description: `:sparkles: :up: You've leveled up to level **${curLevel}**! You're growing up so fast!! :up: :sparkles: `
           }})
         .then(msg => {
-          msg.delete(10000)
+          msg.delete(20000)
         })
         .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
       }
@@ -241,7 +226,7 @@ client.on("message", message => {
           description: `:sparkles: :up: You've leveled up to level **${curLevel}**! WOW, now you're just showing off :up: :sparkles: `
           }})
         .then(msg => {
-          msg.delete(10000)
+          msg.delete(20000)
         })
         .catch(/*Your Error handling if the Message isn't returned, sent, etc.*/);
       }
@@ -331,19 +316,21 @@ function timer(callback, delay) {
 //used to determine cooldown of stars
 const starredRecently = [];
 client.on('messageReactionAdd', async(reaction, user) => {
+
   let message = reaction.message;
   let score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
   var curLevel=score.level
-
+  let guildName = `settings/settings_${message.guild.id}`
+  let file = editJsonFile(`${guildName}.json`);
   //karma
-  if (reaction.emoji.name === '⬆') {
+  if (reaction.emoji.name === '⬆'&& !user.bot) {
     console.log(chalk.blue(`ups!`));
     scoreChange(message, '+',20); 
   }
   //end of add karma
 
   //remove karma
-  if (reaction.emoji.name === '⬇') {
+  if (reaction.emoji.name === '⬇'&& !user.bot) {
     if (message.author.id === user.id) {
       reaction.remove(user).then(reaction => {
         console.log('Removed a reaction.');
@@ -396,11 +383,13 @@ client.on('messageReactionAdd', async(reaction, user) => {
         msg.delete(3000)
       })
       .catch(error);*/
-      const starChannel = message.guild.channels.find('name',settings.starboard);
+      const starChannel = message.guild.channels.find('name',file.get('starboard'));
+      if (!starChannel) message.reply('no star channel found');
 
       console.log('searching if a message like this is already there');
       const fetch = await starChannel.fetchMessages({ limit: 100 }); 
-      const stars = fetch.find(m => m.embeds[0].footer.text.startsWith('⭐') && m.embeds[0].footer.text.endsWith(message.id)); 
+      const stars = fetch.find(m => m.embeds[0].footer.text.startsWith('⭐') && m.embeds[0].footer.text.endsWith(message.id));
+
     if(stars) {
       // Regex to check how many stars the embed has.
       const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.embeds[0].footer.text);
@@ -469,15 +458,16 @@ client.on('messageReactionAdd', async(reaction, user) => {
   }
 }
 });
+
 //reaction removed
 client.on('messageReactionRemove', async(reaction, user) => {
     let score;
     let message = reaction.message;
-    if (reaction.emoji.name === '⬆') {
+    if (reaction.emoji.name === '⬆'&&!user.bot) {
       console.log(chalk.blue(`removed an ups`));
       scoreChange(message, '-', 20)
     }
-    if (reaction.emoji.name === '⬇') {
+    if (reaction.emoji.name === '⬇'&&!user.bot) {
       console.log(chalk.blue(`removed an downs`));
       scoreChange(message, '+', 20)
     }
@@ -488,6 +478,7 @@ client.on('messageReactionRemove', async(reaction, user) => {
     //finds and names the starboard channel
 
     const starChannel = message.guild.channels.find('name','star-channel');
+    if (!starChannel) message.reply('no star channel found');
     const fetchedMessages = await starChannel.fetchMessages({ limit: 100 });
     //searches message
     const stars = fetchedMessages.find(m => m.embeds[0].footer.text.startsWith('⭐') && m.embeds[0].footer.text.endsWith(reaction.message.id)); 
@@ -519,129 +510,76 @@ client.on('messageReactionRemove', async(reaction, user) => {
       console.log(chalk.red('removed a post'));
     }
 });
+
 function GuildName(guild) {
     return "Guild" + guild.replace(/[^a-zA-Z ]/g, "");
+
 }
-client.login(config.token);
 
-//testing reddit patch alert system
-
-client.on('ready', () => {
-
+//setting watchers
+client.on('ready',()=>{
   const botlog= client.channels.find('name','bot-logs'); 
-  const patchLog = client.channels.find('name','patchnotes')
-  const artifact = client.channels.find('name', 'artifuckyeah')
-  const bottesting = client.channels.find('name', 'bot-testing')
-  const procircuit = client.channels.find('name', 'the-pro-circuit')
-  botlog.send('started up')
-  snooper = new Snooper(
-    {
-        // credential information is not needed for snooper.watcher
-        username: 'reddit_username',
-        password: 'reddit password',
-        app_id: 'reddit api app id',
-        api_secret: config.reddit_secret,
-        user_agent: 'OPTIONAL user agent for your bot',
+  const patchLog = client.channels.find('name','dota2');
+  const artifact = client.channels.find('name', 'artifact-isnt-dead-yet');
+  const bottesting = client.channels.find('name', 'bot-testing');
+  const procircuit = client.channels.find('name', 'dota2');
+  const apexlegends = client.channels.find('name', 'we-apex-legends-now');
+  //testWatcher(botlog);
+  dotaWatcher(botlog, patchLog);
+  apexWatcher(botlog, apexlegends)
+});
 
-        automatic_retries: true, // automatically handles condition when reddit says 'you are doing this too much'
-        api_requests_per_minute: 30 // api requests will be spread out in order to play nicely with Reddit
-    });
-  let options = {
-      listing: 'hot', // 'hot' OR 'rising' OR 'controversial' OR 'top_day' OR 'top_hour' OR 'top_month' OR 'top_year' OR 'top_all'
-      limit: 1 // how many posts you want to watch? if any of these spots get overtaken by a new post an event will be emitted, 50 is 2 pages
+client.on('guildMemberAdd', member => {
+  // Send the message to a designated channel on a server:
+  const channel = member.guild.channels.find(ch => ch.name === 'welcome');
+  // Do nothing if the channel wasn't found on this server
+  if (!channel) return;
+  // Send the message, mentioning the member
+  channel.send(`Welcome to the server, ${member}`);
+});
+
+//tude settings
+
+
+client.on('message', message => {
+  if (message.content === `thank you buddy`) {
+    message.reply('You\'re welcome');
   }
-  //dota watcher
-  snooper.watcher.getPostWatcher('dota2') 
+});
 
-    .on('post', function(post) {
-    try{
-        let selfText = post.data.selftext;
-        if (selfText.length > 2000) {
-          selfText= selfText.slice(0,2000).concat('...');
-        }
 
-        const postEmbed = new Discord.RichEmbed()
+client.login(config.token);
+process.setMaxListeners(0);
 
-          .setURL(` ${post.data.url}`)
-          .setTitle(`**${post.data.title}**`)
-          .setAuthor(`${post.data.author}`)
-          .addBlankField(true)
-          .setColor('0x8a2be2')
-          .setThumbnail(`https://pbs.twimg.com/profile_images/807755806837850112/WSFVeFeQ_400x400.jpg`)
-          .setDescription(`${selfText}`)
-          .setImage(`${post.data.url}`)
-          .setTimestamp()
-        console.log('new post') 
-        //botlog.send(postEmbed);
-        if (post.data.author==='SirBelvedere' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
-          console.log(chalk.red('we got one!'));
-          patchLog.send(postEmbed);
-        }
-        if (post.data.author==='wykrhm') {
-          console.log(chalk.red('we got one!'));
-          patchLog.send(postEmbed);
-          patchLog.send("@here")
-        }
-        if (post.data.author==='D2TournamentThreads') {
-          console.log(chalk.red('Spicy event deets!!'));
-          procircuit.send(postEmbed);
-        }
-      }//try
-        catch (e) {
-
-      }//catch
-      process.on('unhandledRejection', err => {
-        console.error(`"error": \n${err.stack}`);
-      });
-    })
-
-    //artifact watcher
-    snooper.watcher.getPostWatcher('Artifact')
+//dumb aprils fools mode
+client.on('typingStart',async(channel, user)=>{
+    let guildName = `settings/settings_${channel.guild.id}`
+    let file = editJsonFile(`${guildName}.json`);
+  const insult_list = [
+    "",
+    `Uh oh, here comes another brilliant message from ${user.username}. 🙄 I bet this will bring tons of value to this conversation.`,
+    `This is gonna be something really stupid, isn't it ${user.username}`,
+    `Here, I'll save you the trouble of what ${user.username}'s about to say: (fart noises)`,
+    `Ugh...not  ${user.username} again.`, 
+    `Incoming insightful comment from ${user.username}🙄`
+   
+    ]; // creates an arraylist containing phrases you want your bot to switch through.
+  
+    const index = Math.floor(Math.random() * (insult_list.length - 1) + 1); // generates a random number between 1 and the length of the activities array list (in this case 5).
+    let insult=(insult_list[index]); // sets bot's activities to one of the phrases in the arraylist.
+    if (user.username=='heckfu' && stalkSettings.stalk=="true") {
+      channel.send(insult)
+    }
+  setTimeout(() => {console.log('timeout')},40000); // Runs this every 40 seconds.
+  console.log(`someone typin in ${channel}` );
+  console.log(`this person is typing ${user.username}`)
+  
     
-    .on('post', function(post) {
-    try{
-        let selfText = post.data.selftext;
-        if (selfText.length > 2000) {
-          selfText= selfText.slice(0,1800).concat('...');
-        }
-        const postEmbed = new Discord.RichEmbed()
-          .setURL(` ${post.data.url}`)
-          .setTitle(`**${post.data.title}**`)
-          .setAuthor(`${post.data.author}`)
-          .setColor('0x8a2be2')
-          .setThumbnail(`http://mattdemers.com/wp-content/uploads/2017/08/valve_artifact_banner-945x500.png`)
-          .setDescription(`${selfText}`)
-          .setImage(`${post.data.url}`)
-          .addBlankField(true)
-          .setTimestamp()
-        //if poster is special, it posts to the primary channel.
-        if (post.data.author==='SirBelvedere' || post.data.author==='wykrhm' || post.data.author==='Magesunite' || post.data.author ==='synysterjoe' ) {
-          console.log(chalk.red('we got one!'));
-          artifact.send(postEmbed);
-        }
-    }//try
-      catch(e){
-      }//catch
-      process.on('unhandledRejection', err => {
-        console.error(`"error": \n${err.stack}`);
-      });
 
-    })
+  
+});
 
-/*
-async () => {
-  let fetched;
-  const suggestionChannel = message.guild.channels.find('name','suggestion-box');
-  do {
-
-    fetched = await channel.fetchMessages({limit: 100});
-    message.channel.bulkDelete(fetched);
-  }
-  while(fetched.size >= 2);
-}
-
-*/
-});// ready
-
-
+client.on('warn', warn => {
+  botlog.send(warn.info)
+})
 

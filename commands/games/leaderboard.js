@@ -43,9 +43,10 @@ module.exports = class LeaderboardCommand extends Command {
 	      .setColor(0x8a2be2);
 
 		if (args.all === ' ') {
+
 			console.log('top ten')
 			for(const data of top10) {
-	      		embed.addField(this.client.users.get(data.user).tag, `**${data.points}** points (level **${data.level}**)`);
+	      		embed.addField(this.client.users.get(data.user).tag, `**${Math.floor(data.points)}** points (level **${data.level}**)`);
 	      		
 	      	}
 	    return message.channel.send({embed});
