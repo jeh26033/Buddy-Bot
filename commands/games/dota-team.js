@@ -28,7 +28,7 @@ module.exports = class TeamCommand extends Command {
         console.log(args.team)
         const alias = args.team;
 
-message.channel.startTyping()
+        message.channel.startTyping()
         if (!alias) {
             message.say('please provide a team')
             return console.log('no team provided')
