@@ -28,45 +28,64 @@ module.exports = class TeamCommand extends Command {
         console.log(args.team)
         const alias = args.team;
 
+        message.channel.startTyping()
         if (!alias) {
             message.say('please provide a team')
             return console.log('no team provided')
 
         }
 
-        try {
+       try{
             const teamInfo = await wikiApi.getTeam(alias);
+            let roster=teamInfo.roster
             console.log(teamInfo)
-            console.log(team.name)
-            message.say({
-                embed: {
-                    color: 3447003,
-                    "author": {
-                        "name": team.name,
-
-                        "url": `https://liquipedia.net/dota2/${teamInfo.name}`,
+            console.log(teamInfo.name)
+            const teamURL = `https://liquipedia.net/dota2/${teamInfo.name}`
+            console.log(teamURL)
+            
+            roster=roster.map(member => (
+                                `**${member.handle}** (${member.name}) ${member.isCaptain ? '👑' : ''} Joined: ${member.joinDate}, position: ${member.position}`)).join("\n")
+            
+            message.say({embed: {
+                    color: 0x8a2be2,
+                    author: {
+                        name: teamInfo.name,
+                        icon_url: teamInfo.teamLogo,
+                  
                     },
-                    "fields": [
-                        {
-                            "name": 'Region',
-                            "value": teamInfo.region,
-                            "inline": true
+                    fields: [{
+                        
+                            name: 'Region',
+                            value: teamInfo.region
+                            
                         },
                         {
-                            "name": 'Roster',
-                            "value": teamInfo.roster.map(member => (
-                                `**${member.handle}** (${member.name}) ${member.isCaptain ? '👑' : ''}`.join("\n")
-                            )),
-                            "inline": true
+                            name: 'Roster',
+                            value: roster
+                          
                         },
+                        {
+                            name: 'Location',
+                            value: teamInfo.location
+                          
+                        },                        
+                        {
+                            name: 'Earnings',
+                            value: teamInfo.earnings
+                          
+                        },                        
+
+
                     ]
                 }
-            });
-        } catch (e) {
-            message.say(`Could not find team matching: \`${alias}\`.  Please try again`)
+
+        });
+    }catch (e) {
+            message.say(`Could not find team matching: \`${alias}\`. Try a different spelling or capitalizing it`)
         }
-
-
+    message.channel.stopTyping();
 
     }//end of run
+
 }
+
