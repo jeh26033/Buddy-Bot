@@ -5,10 +5,10 @@ https://discordapp.com/api/oauth2/authorize?client_id=474236944461856778&permiss
 A fun general purpose Discord bot. 
 key features:
 
-Starboard: a place for special messages that need to be saved for posterity
-
+<h2>Starboard:</h2> a place for special messages that need to be saved for posterity
 Karma system: A reaction based karma system, complete with dumb things to spend the points on!
 
-Joinables: Use reaction to join roles! (beta feature)
 
 Dumb meme shit: Comes standard with every buddy bot!
+
+
