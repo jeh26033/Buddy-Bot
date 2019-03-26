@@ -1,5 +1,10 @@
 const { Command } = require('discord.js-commando');
+const { oneLine, stripIndents } = require('common-tags');
+const { RichEmbed } = require('discord.js');
+const Discord = require('discord.js');
+const client = new Discord.Client();
 const SQLite = require("better-sqlite3");
+const scoreChange  = require('../../util/scoreChange.js');
 const sql = new SQLite('./scores.sqlite');
 module.exports = class AdminGivePointsCommand extends Command {
     constructor(client) {
@@ -35,9 +40,41 @@ module.exports = class AdminGivePointsCommand extends Command {
       }
 
   run(message, args) {
+
+      client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
+      client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level, dotaid) VALUES (@id, @user, @guild, @points, @level, @dotaid);");
+
+     console.log(`${args.user} user`)
+
+      
+      let score = client.getScore.get(args.user.id, message.guild.id);
+      console.log(client.getScore);
+      console.log(score);
+
+      var curLevel=score.level;
+      console.log(curLevel);
+      var karmicPower = args.amount;
+      console.log(karmicPower);
+      const curPts = score.points;
+
     const botlog= client.channels.find('name','bot-logs');
     console.log('lets create inflation!!');
-    let score = this.client.getScore.get(message.author.id, message.guild.id);
+    message.say('lets create inflation!!');
+    console.log(`${args.user} user`)
+
+
+    if (args.amount > 0) {
+      Math.floor(score.points += karmicPower); 
+      client.setScore.run(score);
+
+    }else{
+      Math.floor(score.points = karmicPower); 
+      Math.floor(score.level = karmicPower);
+      client.setScore.run(score);
+    }
+
+
+   /* let score = this.client.getScore.get(message.author.id, message.guild.id);
     
     // If the score doesn't exist (new user), initialize with defaults. 
     if (!score) {
@@ -74,7 +111,7 @@ module.exports = class AdminGivePointsCommand extends Command {
     // And we save it!
     this.client.setScore.run(userscore);
     botlog.send(`${pointsToAdd} Buddybucks added to ${user.tag}. You have a balance of ${score.points} buddybucks for a star!`);
-    return message.channel.send(`${user.tag} has received ${pointsToAdd} Buddybucks and now stands at ${userscore.points} Buddybucks.`);
+    return message.channel.send(`${user.tag} has received ${pointsToAdd} Buddybucks and now stands at ${userscore.points} Buddybucks.`);*/
 
 /*
         const botlog=this.client.channels.find('name','bot-logs');

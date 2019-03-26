@@ -37,7 +37,7 @@ module.exports = class PruneCommand extends Command {
       msgArray = msgArray.filter(m => m.author.id === this.client.user.id);
       msgArray.length = messagecount + 1;
       msgArray.map(m => m.delete().catch(console.error));
-      message.channel.send(`:fire: Clean Complete :fire:\nPurged: ${messagecount}`);
+     // message.channel.send(`:fire: Clean Complete :fire:\nPurged: ${messagecount}`);
     });
   }
 };

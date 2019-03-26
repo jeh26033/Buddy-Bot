@@ -13,9 +13,10 @@ module.exports = class ReplyCommand extends Command {
 }
         });
     }
-    run(msg) {
-        
-        return msg.say('Hi, I\'m awake!');
+    run(message) {
+        this.client.emit("guildMemberAdd", message.member);
+        message.channel.send("Test").then(sentMessage => sentMessage.edit("Blah"));
+        //return msg.say('@here');
 
     }
 };

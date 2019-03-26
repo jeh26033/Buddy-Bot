@@ -3,12 +3,14 @@ const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
 const {Command} = require('discord.js-commando');
 const commando = require('discord.js-commando');
-const scoreChange  = require('./util/scoreChange.js');
 const client = new Discord.Client();
 
-  function reactions(message, operation, amount){
+  function scoreChange(message, operation, amount){
+  client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
+  client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level, dotaid) VALUES (@id, @user, @guild, @points, @level, @dotaid);");
+
     try{
-      console.log('hello from the reactions Module!');
+      console.log('hello from the scoreChange Module!');
       let score =client.getScore.get(message.author.id, message.guild.id);
       console.log(client.getScore);
       console.log(score);
@@ -20,15 +22,20 @@ const client = new Discord.Client();
       console.log(karmicPower);
       const curPts = score.points;
       if (operation=== '-') {
-        score.points -= karmicPower;
+        Math.floor(score.points -= karmicPower);
         client.setScore.run(score);
       }
       if (operation=== '+') {
-        score.points += karmicPower;
+        Math.floor(score.points += karmicPower);
+        client.setScore.run(score);
+      }
+      if (operation=== '/') {
+        Math.floor(score.points = 0);
+        Math.floor(score.level = 0);
         client.setScore.run(score);
       }
     } catch (e) {
       console.log(e);
     }
   }
-module.exports = reaction;
+module.exports = scoreChange;
