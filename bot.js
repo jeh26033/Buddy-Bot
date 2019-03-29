@@ -70,9 +70,8 @@ client.registry
 const testWatcher = require('./util/watcher.js');
 const dotaWatcher = require('./util/dotawatcher.js');
 const apexWatcher = require('./util/apexwatcher.js');
-const setStalker = require('./util/stalker.js');
 const scoreChange  = require('./util/scoreChange.js');
-
+const reactions  = require('./util/reactions.js');
 //SETS UP COMMUNICATIVE STATUS
 client.on("ready", () => {
   client.user.setActivity('RESTARTING', {type: 'LISTENING'});
@@ -166,6 +165,75 @@ client.on('ready', () => {
 });
 
 
+
+
+//debug messages
+client.on('commandBlocked', (msg, reason) => {
+    console.log(oneLine `
+            Command ${msg.command ? `${msg.command.groupID}:${msg.command.memberName}` : ''}
+            blocked; ${reason}
+        `);
+})
+client.on('commandStatusChange', (guild, command, enabled) => {
+    console.log(oneLine `
+            Command ${command.groupID}:${command.memberName}
+            ${enabled ? 'enabled' : 'disabled'}
+            ${guild ? `in guild ${guild.name} (${guild.id})` : 'globally'}.
+        `);
+})
+//sends command run to bot-log as well
+client.on('commandRun', (command, promise, msg) => {
+    if (msg.guild) {
+      //wish i didn't need to declare this every time 
+    
+        console.log(`Command ran
+        Guild: ${msg.guild.name} (${msg.guild.id})
+        Channel: ${msg.channel.name} (${msg.channel.id})
+        User: ${msg.author.tag} (${msg.author.id})
+        Command: ${command.groupID}:${command.memberName}
+        Message: "${msg.content}"`);
+    } else {
+        console.log(`Command ran:
+        Guild: DM
+        Channel: N/A
+        User: ${msg.author.tag} (${msg.author.id})
+        Command: ${command.groupID}:${command.memberName}
+        Message: "${msg.content}"`);
+    }
+});
+
+//super cool Reactions!
+function timer(callback, delay) {
+    var id, started, remaining = delay, running
+
+    this.start = function() {
+        running = true
+        started = new Date()
+        id = setTimeout(callback, remaining)
+    }
+
+    this.pause = function() {
+        running = false
+        clearTimeout(id)
+        remaining -= new Date() - started
+    }
+
+    this.getTimeLeft = function() {
+        if (running) {
+            this.pause()
+            this.start()
+        }
+
+        return remaining
+    }
+
+    this.getStateRunning = function() {
+        return running
+    }
+
+    this.start()
+}
+
 //points per message system
 client.on("message", (message, guild) => {
   let score;
@@ -231,123 +299,42 @@ client.on("message", (message, guild) => {
   }
 });//message
 
-//debug messages
-client.on('commandBlocked', (msg, reason) => {
-    console.log(oneLine `
-            Command ${msg.command ? `${msg.command.groupID}:${msg.command.memberName}` : ''}
-            blocked; ${reason}
-        `);
-})
-client.on('commandStatusChange', (guild, command, enabled) => {
-    console.log(oneLine `
-            Command ${command.groupID}:${command.memberName}
-            ${enabled ? 'enabled' : 'disabled'}
-            ${guild ? `in guild ${guild.name} (${guild.id})` : 'globally'}.
-        `);
-})
-//sends command run to bot-log as well
-client.on('commandRun', (command, promise, msg) => {
-    if (msg.guild) {
-
-      //wish i didn't need to declare this every time 
-      let guildName = `settings/settings_${msg.guild.id}`
-      let file = editJsonFile(`${guildName}.json`);
-      const botlog=file.get('botlog');
-
-
-      botlog.send({embed: {
-            color: 0x8a2be2,
-            description: `
-            **Command ran**
-        Guild: ${msg.guild.name} (${msg.guild.id})
-        Channel: ${msg.channel.name} (${msg.channel.id})
-        User: ${msg.author.tag} (${msg.author.id})
-        Command: ${command.groupID}:${command.memberName}
-        Message: "${msg.content}"
-            `
-        }});
-        console.log(`Command ran
-        Guild: ${msg.guild.name} (${msg.guild.id})
-        Channel: ${msg.channel.name} (${msg.channel.id})
-        User: ${msg.author.tag} (${msg.author.id})
-        Command: ${command.groupID}:${command.memberName}
-        Message: "${msg.content}"`);
-    } else {
-        console.log(`Command ran:
-        Guild: DM
-        Channel: N/A
-        User: ${msg.author.tag} (${msg.author.id})
-        Command: ${command.groupID}:${command.memberName}
-        Message: "${msg.content}"`);
-    }
-});
-
-//super cool Reactions!
-function timer(callback, delay) {
-    var id, started, remaining = delay, running
-
-    this.start = function() {
-        running = true
-        started = new Date()
-        id = setTimeout(callback, remaining)
-    }
-
-    this.pause = function() {
-        running = false
-        clearTimeout(id)
-        remaining -= new Date() - started
-    }
-
-    this.getTimeLeft = function() {
-        if (running) {
-            this.pause()
-            this.start()
-        }
-
-        return remaining
-    }
-
-    this.getStateRunning = function() {
-        return running
-    }
-
-    this.start()
-}
-
 //used to determine cooldown of stars
 const starredRecently = [];
 client.on('messageReactionAdd', async(reaction, user) => {
-
   let message = reaction.message;
-  let score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
-  var curLevel=score.level
-  let guildName = `settings/settings_${message.guild.id}`
-  let file = editJsonFile(`${guildName}.json`);
-  //karma
-  if (reaction.emoji.name === '⬆'&& !user.bot) {
-    console.log(chalk.blue(`ups!`));
-    scoreChange(message, '+',20); 
-  }
-  //end of add karma
+  let reactionName = reaction.emoji.name;
+  // let score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+  // var curLevel=score.level
+  // let guildName = `settings/settings_${message.guild.id}`
+  // let file = editJsonFile(`${guildName}.json`);
 
-  //remove karma
-  if (reaction.emoji.name === '⬇'&& !user.bot) {
-    if (message.author.id === user.id) {
-      reaction.remove(user).then(reaction => {
-        console.log('Removed a reaction.');
-      });
-    }
-    if (message.author.id === user.id) return message.channel.send({embed: {
-      color: 0x8a2be2,
-      description:`${user}, knock it off.`
-    }})
-  .then(msg => {
-    msg.delete(3000)
-    })
-  .catch();
-    console.log(chalk.blue(`Found an downs`));
-    scoreChange(message, '-', 20); 
-  }
+  reactions(reactionName, user, message)
+  //karma
+  // if (reaction.emoji.name === '⬆'&& !user.bot) {
+  //   console.log(chalk.blue(`ups!`));
+  //   scoreChange(message, '+',20); 
+  // }
+  // //end of add karma
+
+  // //remove karma
+  // if (reaction.emoji.name === '⬇'&& !user.bot) {
+  //   if (message.author.id === user.id) {
+  //     reaction.remove(user).then(reaction => {
+  //       console.log('Removed a reaction.');
+  //     });
+  //   }
+  //   if (message.author.id === user.id) return message.channel.send({embed: {
+  //     color: 0x8a2be2,
+  //     description:`${user}, knock it off.`
+  //   }})
+  // .then(msg => {
+  //   msg.delete(3000)
+  //   })
+  // .catch();
+  //   console.log(chalk.blue(`Found an downs`));
+  //   scoreChange(message, '-', 20); 
+  // }
   //end of remove karma
 
   //STAR TIME
@@ -564,10 +551,10 @@ client.on('typingStart',async(channel, user)=>{
     `Ugh...not  ${user.username} again.`, 
     `Incoming insightful comment from ${user.username}🙄`
    
-    ]; // creates an arraylist containing phrases you want your bot to switch through.
+    ]; 
   
-    const index = Math.floor(Math.random() * (insult_list.length - 1) + 1); // generates a random number between 1 and the length of the activities array list (in this case 5).
-    let insult=(insult_list[index]); // sets bot's activities to one of the phrases in the arraylist.
+    const index = Math.floor(Math.random() * (insult_list.length - 1) + 1); 
+    let insult=(insult_list[index]);
     if (user.username=='heckfu' && file.stalk=="true") {
       channel.send(insult)
     }
