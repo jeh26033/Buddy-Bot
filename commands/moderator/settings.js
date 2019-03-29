@@ -23,7 +23,7 @@ module.exports = class settingsCommand extends Command {
       args: [{
         key: 'setting',
         label: 'set',
-        prompt: 'What setting would you like to change? Options currently include: starboard',
+        prompt: 'What setting would you like to change? Options currently include: starboard, botlog, silence_role',
         type: 'string',
         clientPermissions: ['MANAGE_ROLES'],
         infinite: false
@@ -64,6 +64,16 @@ module.exports = class settingsCommand extends Command {
     if (args.setting === 'stalk') {
       console.log('changing stalk setting');
       file.set("stalk", args.command);
+
+    }
+    if (args.setting === 'botlog') {
+      console.log('changing botlog settings');
+      file.set("botlog",args.command);
+
+    }
+    if (args.setting === 'silence_role') {
+      console.log('changing silence role setting');
+      file.set("silence_role" ,args.command);
 
     }
     if (args.setting === 'print') {

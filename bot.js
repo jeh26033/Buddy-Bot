@@ -170,7 +170,11 @@ client.on('ready', () => {
 
 
 client.on("message", message => {
-  const botlog=client.channels.find('name','bot-logs');
+  let guildName = `settings/settings_${message.guild.id}`
+  let file = editJsonFile(`${guildName}.json`);
+
+  const botlog=file.botlog;
+  console.log(file.get('botlog'));
   
   
 
@@ -251,7 +255,10 @@ client.on('commandStatusChange', (guild, command, enabled) => {
 client.on('commandRun', (command, promise, msg) => {
     if (msg.guild) {
       //wish i didn't need to declare this every time 
-      const botlog=client.channels.find('name','bot-logs');
+    let guildName = `settings/settings_${message.guild.id}`
+    let file = editJsonFile(`${guildName}.json`);
+
+    const botlog=file.get('botlog');
       botlog.send({embed: {
             color: 0x8a2be2,
             description: `
