@@ -87,8 +87,6 @@ client
     .on('error', e => console.error(error(e)))
     .on('warn', e => console.warn(chalk.red(warn(e))))
     .on('debug', e => console.log(chalk.green(debug(e))))
-    .on('ready', () => {
-    })
     .on('disconnect', () => console.warn('Disconnected!'))
     .on('reconnecting', () => console.warn('Reconnecting...'))
     .on('commandError', (cmd, err) => {
@@ -168,19 +166,14 @@ client.on('ready', () => {
 });
 
 
-
-client.on("message", message => {
-  let guildName = `settings/settings_${message.guild.id}`
-  let file = editJsonFile(`${guildName}.json`);
-
-  const botlog=file.botlog;
-  console.log(file.get('botlog'));
-  
-  
-
-
+//points per message system
+client.on("message", (message, guild) => {
   let score;
   if (message.guild) {
+    let guildName = `settings/settings_${message.guild.id}`
+    let file = editJsonFile(`${guildName}.json`);
+    const botlog=file.botlog;
+    
     // Try to get the current user's score. 
     score = client.getScore.get(message.author.id, message.guild.id);
     
@@ -196,7 +189,7 @@ client.on("message", message => {
     // Increment points.
     score.points++;
   }
-    // Calculate the current level through MATH OMG HALP.
+    // Calculate the current level through math.
     let curLevel = Math.floor(0.1 * Math.sqrt(score.points+1));
     // Check if the user has leveled up, and let them know if they have:
     if(score.level < curLevel) {
@@ -237,6 +230,7 @@ client.on("message", message => {
     client.setScore.run(score);
   }
 });//message
+
 //debug messages
 client.on('commandBlocked', (msg, reason) => {
     console.log(oneLine `
@@ -254,11 +248,13 @@ client.on('commandStatusChange', (guild, command, enabled) => {
 //sends command run to bot-log as well
 client.on('commandRun', (command, promise, msg) => {
     if (msg.guild) {
-      //wish i didn't need to declare this every time 
-    let guildName = `settings/settings_${message.guild.id}`
-    let file = editJsonFile(`${guildName}.json`);
 
-    const botlog=file.get('botlog');
+      //wish i didn't need to declare this every time 
+      let guildName = `settings/settings_${msg.guild.id}`
+      let file = editJsonFile(`${guildName}.json`);
+      const botlog=file.get('botlog');
+
+
       botlog.send({embed: {
             color: 0x8a2be2,
             description: `
