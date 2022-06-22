@@ -32,7 +32,7 @@
 		"ffmpeg-binaries": "^4.0.0",
 		"fuzzyset.js": "0.0.7",
 		"giphy-js-sdk-core": "^1.0.5",
-		"got": "^7.1.0",
+		"got": "^11.8.5",
 		"html2plaintext": "^2.0.1",
 		"mathjs": "^5.0.4",
 		"mika": "^1.5.5",
